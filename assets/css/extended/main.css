@@ -1,0 +1,155 @@
+/* Homepage profile: bio (left) + photo & links (right) on wide screens; stacked on narrow */
+
+/* PaperMod caps .main at ~720px (--main-width) and centers .profile — widen only the profile homepage */
+main.main:has(.profile) {
+    max-width: min(1320px, calc(100vw - 2 * var(--gap, 24px))) !important;
+}
+
+/* Let the profile block use full main width (theme uses flex + center, which shrinks content) */
+.main .profile {
+    width: 100% !important;
+    max-width: 100% !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    min-height: auto !important;
+}
+
+/* Theme sets .profile .profile_inner { align-items: center } — override so columns can breathe */
+.profile .profile_inner {
+    align-items: stretch !important;
+}
+
+body {
+    background-color: #f9f8f4 !important;
+    font-family: "JetBrains Mono", "Menlo", "Monaco", monospace !important;
+    color: #333;
+}
+
+.profile_inner {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: clamp(1.75rem, 4vw, 2.75rem);
+    width: 100% !important;
+    max-width: 1280px !important;
+    margin: clamp(2rem, 5vw, 4rem) auto !important;
+    padding: 0 clamp(1.25rem, 5vw, 3rem) !important;
+    box-sizing: border-box !important;
+}
+
+.profile_bio_panel,
+.profile_side_panel {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.profile_bio_panel {
+    padding: clamp(1.25rem, 3vw, 2rem);
+    flex: 1 1 auto;
+    min-width: 0;
+    order: 2;
+}
+
+.profile_side_panel {
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    flex: 0 0 auto;
+    order: 1;
+}
+
+.profile_title {
+    margin: 0 0 1rem 0 !important;
+    font-size: clamp(1.5rem, 2.5vw, 2rem) !important;
+    line-height: 1.25 !important;
+    text-align: center;
+}
+
+.profile_bio {
+    text-align: left;
+}
+
+.profile_bio p {
+    margin: 0 0 1em 0 !important;
+    line-height: 1.75 !important;
+    font-size: clamp(0.95rem, 1.2vw, 1.05rem) !important;
+}
+
+.profile_bio p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.profile_bio_panel .social-icons {
+    margin-top: 1.25rem;
+    justify-content: flex-start;
+}
+
+.profile_image_frame {
+    width: 100%;
+    max-width: min(340px, 88vw);
+}
+
+/* Theme uses .profile img { border-radius: 50% } — square crop reads better here */
+.profile .profile_image_frame img {
+    display: block;
+    width: 100%;
+    height: auto !important;
+    border-radius: 10px !important;
+    object-fit: cover;
+    aspect-ratio: 1 / 1;
+}
+
+.profile_links_nav {
+    width: 100%;
+    max-width: min(340px, 100%);
+}
+
+.profile_buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+}
+
+.profile_buttons .button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+}
+
+@media (min-width: 900px) {
+    .profile_inner {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: clamp(2rem, 4vw, 3.5rem) !important;
+    }
+
+    .profile_bio_panel {
+        order: 1;
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .profile_side_panel {
+        order: 2;
+        flex: 0 0 clamp(280px, 32vw, 360px);
+        max-width: 380px;
+        position: sticky;
+        top: 1.5rem;
+    }
+
+    .profile_title {
+        text-align: left !important;
+    }
+
+    .profile_bio_panel .social-icons {
+        justify-content: flex-start;
+    }
+}

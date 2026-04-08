@@ -1,26 +1,33 @@
 baseURL = 'https://larrythul.com/'
 languageCode = 'en-us'
 title = 'Larry Thul'
+# PaperMod: git submodule at themes/PaperMod (see .gitmodules). With Go installed you may
+# alternatively use Hugo Modules: hugo mod init <module-path> && hugo mod get github.com/adityatelange/hugo-PaperMod
 theme = 'PaperMod'
 
 [params]
     env = "production"
     title = "Larry Thul"
-    description = "Director of AI | PhD in Electrical Engineering | Expert in Stochastic Optimization"
+    # Eggshell white background hex: #F0EAD6 or #F9F8F4
+    # We will apply the font via CSS, but let's set the theme colors here
+    labelIcon = " "
     
     [params.profileMode]
         enabled = true
-        title = "Larry Thul"
-        subtitle = "PhD from Princeton University specializing in stochastic optimization and decision intelligence."
-        imageUrl = "path/to/your/photo.jpg" # Optional
+        title = "Lawrence Thul, PhD"
+        # Bio text lives in content/_index.md (easier to edit). Optional fallback if that file is empty:
+        # subtitle = "Short bio here…"
+        # assets/ path so Hugo can process/resize; static/ copy kept for direct URLs if needed
+        imageUrl = "images/1734702873333.jpeg"
+        imageWidth = 300
+        imageHeight = 300
+
         [[params.profileMode.buttons]]
-            name = "Research"
+            name = "LinkedIn"
+            url = "https://www.linkedin.com/in/lawrence-thul-68b212117/"
+        [[params.profileMode.buttons]]
+            name = "Google Scholar"
             url = "https://scholar.google.com/citations?user=IWecxBMAAAAJ"
         [[params.profileMode.buttons]]
             name = "Resume"
-            url = "resume.pdf"
-
-    [[params.socialIcons]]
-        name = "linkedin"
-        url = "https://www.linkedin.com/in/lawrence-thul-68b212117/"
-    
+            url = "Resume_LT.pdf"
