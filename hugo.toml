@@ -8,6 +8,8 @@ theme = 'PaperMod'
 [params]
     env = "production"
     title = "Larry Thul"
+    # Hide the top nav bar (logo, menu, theme toggle). Use profile buttons for links instead.
+    hideSiteHeader = true
     # Eggshell white background hex: #F0EAD6 or #F9F8F4
     # We will apply the font via CSS, but let's set the theme colors here
     labelIcon = " "
@@ -31,3 +33,7 @@ theme = 'PaperMod'
         [[params.profileMode.buttons]]
             name = "Resume"
             url = "Resume_LT.pdf"
+        # Internal pages use root-relative paths (no https://), e.g. url = "/posts/"
+        # [[params.profileMode.buttons]]
+        #     name = "Blog"
+        #     url = "/posts/"

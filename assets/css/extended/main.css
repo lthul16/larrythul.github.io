@@ -1,8 +1,15 @@
 /* Homepage profile: bio (left) + photo & links (right) on wide screens; stacked on narrow */
 
+/* No top header: avoid extra top offset that assumed nav height */
+.no-site-header {
+    --header-height: 0px;
+}
+
 /* PaperMod caps .main at ~720px (--main-width) and centers .profile — widen only the profile homepage */
 main.main:has(.profile) {
-    max-width: min(1320px, calc(100vw - 2 * var(--gap, 24px))) !important;
+    max-width: min(1400px, calc(100vw - 2 * var(--gap, 24px))) !important;
+    /* Theme uses padding: var(--gap) on .main — pull content closer to the header */
+    padding: 0.35rem var(--gap, 24px) var(--gap, 24px) !important;
 }
 
 /* Let the profile block use full main width (theme uses flex + center, which shrinks content) */
@@ -32,8 +39,8 @@ body {
     align-items: stretch !important;
     gap: clamp(1.75rem, 4vw, 2.75rem);
     width: 100% !important;
-    max-width: 1280px !important;
-    margin: clamp(2rem, 5vw, 4rem) auto !important;
+    max-width: 1360px !important;
+    margin: clamp(0.5rem, 2vw, 1.25rem) auto clamp(1.5rem, 4vw, 2.5rem) !important;
     padding: 0 clamp(1.25rem, 5vw, 3rem) !important;
     box-sizing: border-box !important;
 }
@@ -72,16 +79,39 @@ body {
 
 .profile_bio {
     text-align: left;
+    font-size: clamp(0.82rem, 1vw, 0.92rem) !important;
+    line-height: 1.62 !important;
 }
 
 .profile_bio p {
-    margin: 0 0 1em 0 !important;
-    line-height: 1.75 !important;
-    font-size: clamp(0.95rem, 1.2vw, 1.05rem) !important;
+    margin: 0 0 0.85em 0 !important;
+    line-height: inherit !important;
+    font-size: inherit !important;
 }
 
 .profile_bio p:last-child {
     margin-bottom: 0 !important;
+}
+
+/* Lists: keep markers inside the same horizontal band as paragraph text */
+.profile_bio ul,
+.profile_bio ol {
+    margin: 0.55em 0 0.9em !important;
+    padding-left: 1.35rem !important;
+    list-style-position: outside;
+}
+
+.profile_bio li {
+    margin: 0.35em 0 !important;
+    padding-left: 0.35rem !important;
+    line-height: inherit !important;
+    font-size: inherit !important;
+}
+
+.profile_bio ul ul,
+.profile_bio ol ol {
+    margin-top: 0.35em !important;
+    margin-bottom: 0.35em !important;
 }
 
 .profile_bio_panel .social-icons {
@@ -128,9 +158,10 @@ body {
         flex-direction: row !important;
         align-items: flex-start !important;
         justify-content: space-between !important;
-        gap: clamp(2rem, 4vw, 3.5rem) !important;
+        gap: clamp(1.5rem, 3vw, 2.5rem) !important;
     }
 
+    /* Bio column grows; photo column is capped narrow so text gets more width */
     .profile_bio_panel {
         order: 1;
         flex: 1 1 0;
@@ -139,8 +170,8 @@ body {
 
     .profile_side_panel {
         order: 2;
-        flex: 0 0 clamp(280px, 32vw, 360px);
-        max-width: 380px;
+        flex: 0 0 clamp(220px, 22vw, 280px);
+        max-width: 300px;
         position: sticky;
         top: 1.5rem;
     }
