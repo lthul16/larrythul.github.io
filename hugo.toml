@@ -30,9 +30,6 @@ theme = 'PaperMod'
         [[params.profileMode.buttons]]
             name = "Google Scholar"
             url = "https://scholar.google.com/citations?user=IWecxBMAAAAJ"
-        [[params.profileMode.buttons]]
-            name = "Resume"
-            url = "Resume_LT.pdf"
         # Internal pages use root-relative paths (no https://), e.g. url = "/posts/"
         # [[params.profileMode.buttons]]
         #     name = "Blog"
