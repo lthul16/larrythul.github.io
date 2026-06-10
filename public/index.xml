@@ -20,7 +20,7 @@
       <link>http://localhost:1313/bio/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/bio/</guid>
-      <description>Background in stochastic optimization, multi-agent decision-making, and commercial AI at scale.</description>
+      <description>&lt;p&gt;I enjoy turning AI research into production systems. My work lives at the intersection of stochastic optimization, AI, and machine learning applied to high-stakes physical world problems.  Throughout my career I&amp;rsquo;ve carried ideas the full distance, from a theorem on a whiteboard to production software making decisions on billions of dollars worth of freight per year. I work across the stack from doing reesarch to prove why an approach works, building the pipeline that ships it, and leading the team that takes it to market.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
