@@ -48,12 +48,13 @@ body {
     margin: 0 auto !important;
 }
 
-.logo a {
-    font-family: var(--font-serif) !important;
-    font-weight: 600 !important;
-    font-size: 1.15rem !important;
-    color: var(--site-text) !important;
-    letter-spacing: -0.01em;
+.nav--no-logo {
+    justify-content: flex-start !important;
+}
+
+.nav--no-logo #menu {
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 #menu a {
@@ -74,9 +75,6 @@ body {
     font-weight: 600 !important;
 }
 
-.logo-switches {
-    display: none !important;
-}
 
 /* ── Main layout ───────────────────────────────────────────────── */
 main.main {
