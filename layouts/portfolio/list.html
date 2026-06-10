@@ -1,0 +1,19 @@
+{{- define "main" }}
+<article class="site-page site-page--portfolio">
+    <header class="site-page__hero">
+        <p class="site-page__label">Work</p>
+        <h1 class="site-page__title">{{ .Title }}</h1>
+        {{- with .Description }}
+        <p class="site-page__lede">{{ . }}</p>
+        {{- end }}
+    </header>
+
+    {{- if .Content }}
+    <div class="site-page__body">
+        <div class="content-panel content-prose portfolio-prose">
+            {{ .Content }}
+        </div>
+    </div>
+    {{- end }}
+</article>
+{{- end }}

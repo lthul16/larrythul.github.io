@@ -1,0 +1,55 @@
+{{- define "main" }}
+<article class="site-page site-page--blog">
+    <header class="site-page__hero">
+        <p class="site-page__label">Writing</p>
+        <h1 class="site-page__title">{{ .Title }}</h1>
+        {{- with .Description }}
+        <p class="site-page__lede">{{ . }}</p>
+        {{- end }}
+    </header>
+
+    <div class="site-page__body">
+        <div class="blog-grid">
+            {{- $pages := where .RegularPages "Params.hiddenInHomeList" "!=" "true" -}}
+            {{- range $pages }}
+            <article class="blog-card">
+                <div class="blog-card__inner">
+                    <header class="blog-card__header">
+                        {{- with .Params.tags }}
+                        <div class="blog-card__tags">
+                            {{- range first 3 . }}
+                            <span class="tag-pill">{{ . }}</span>
+                            {{- end }}
+                        </div>
+                        {{- end }}
+                        <h2 class="blog-card__title">
+                            <a href="{{ .Permalink }}">{{ .Title }}</a>
+                        </h2>
+                        {{- with .Description }}
+                        <p class="blog-card__summary">{{ . }}</p>
+                        {{- else }}
+                        <p class="blog-card__summary">{{ .Summary | plainify | truncate 180 }}</p>
+                        {{- end }}
+                    </header>
+                    <footer class="blog-card__footer">
+                        <time class="blog-card__date" datetime="{{ .Date.Format "2006-01-02" }}">
+                            {{ .Date.Format "January 2, 2006" }}
+                        </time>
+                        {{- if .Draft }}
+                        <span class="blog-card__status">Draft</span>
+                        {{- end }}
+                        <a class="blog-card__link" href="{{ .Permalink }}" aria-label="Read {{ .Title }}">
+                            Read →
+                        </a>
+                    </footer>
+                </div>
+            </article>
+            {{- else }}
+            <div class="content-panel content-panel--empty">
+                <p>No posts yet. Check back soon.</p>
+            </div>
+            {{- end }}
+        </div>
+    </div>
+</article>
+{{- end }}
