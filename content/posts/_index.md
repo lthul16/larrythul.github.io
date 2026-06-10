@@ -1,4 +1,4 @@
 ---
 title: "Blog"
-description: "Tutorials and notes on decision intelligence, reinforcement learning, and AI safety."
+description: "Writing and interviews on decision intelligence, AI, and my work in industry."
 ---

@@ -5,26 +5,26 @@ description: "Selected work across industry, doctoral research, and ongoing proj
 
 {{< portfolio-section title="Recent Work" >}}
 {{< portfolio-card variant="stub" status="Coming soon" >}}
-I am studying post-training and reinforcement learning algorithms for safety research. This section will be updated with projects and write-ups as they take shape.
+I am currently studying LLM post-training and reinforcement learning algorithms. This section will be updated with projects and write-ups as they take shape.
 {{< /portfolio-card >}}
 {{< /portfolio-section >}}
 
 {{< portfolio-section title="Optimal Dynamics" intro="During five years as Director of AI, I built and led the technical foundations behind many products within Optimal Dynamics' Transportation Decision System, bridging CASTLE Lab research with production-scale freight optimization." >}}
 {{< portfolio-grid >}}
-{{< portfolio-card title="Decision-Native Agents" link="https://www.optimaldynamics.com/platform/agentic-automation" linkText="Agentic Automation Layer →" >}}
+{{< portfolio-card title="Decision-Native Agents" link="https://www.optimaldynamics.com/platform/agentic-automation" linkText="Product page →" link2="https://www.optimaldynamics.com/resource/ai-hype-to-decision-native-reality-daniel-powell-discusses-scale-on-what-the-truck" linkText2="Scale overview →" >}}
 I pioneered the agentic orchestration layer at Optimal Dynamics. Atlas, the Agentic Automation Layer, turns optimization outputs into coordinated, autonomous action. Rather than reactive task-takers following simple scripts, these decision-native agents are powered by the core optimization engine and understand the full complexity of the network.
 {{< /portfolio-card >}}
 
-{{< portfolio-card title="Bid Platform" link="https://www.optimaldynamics.com/solutions/bid-analysis" linkText="Bid Analysis →" >}}
+{{< portfolio-card title="Bid Platform" link="https://www.optimaldynamics.com/solutions/bid-analysis" linkText="Product page →" link2="https://www.sdcexec.com/software-technology/ai-ar/article/22923961/optimal-dynamics-how-leveraging-artificial-decision-intelligence-can-help-carriers-win-this-bidding-season" linkText2="Industry press →" link3="https://www.optimaldynamics.com/resource/managing-freight-trucking-bids-at-scale-while-maintaining-network-optimization" linkText3="Bids at scale →" >}}
 I was the architect of the Bid Platform, which helps truckload carriers respond to RFPs with confidence. The product overlays bid lanes on an optimized digital twin of the carrier's network to uncover the best lanes, optimal volumes, and new business opportunities.
 {{< /portfolio-card >}}
 
-{{< portfolio-card title="Time Series Forecasting" >}}
+{{< portfolio-card title="Time Series Forecasting" link="https://www.optimaldynamics.com/resource/beyond-digital-freight-load-hunting-how-forecasting-automation-unlocks-efficiencies-in-daily-planning" linkText="Daily planning →" >}}
 I owned the custom-built time series forecasting engine that powers all major Optimal Dynamics products. Distributional forecasting is a key component of stochastic optimization engines, and my work at CASTLE Lab on modeling uncertainty directly informed how we built forecasting systems at scale.
 {{< /portfolio-card >}}
 
-{{< portfolio-card title="Data Platform" >}}
-I was the architect of modernizing the company's entire ETL pipeline, the data foundation that feeds every product in the Transportation Decision System. This work spanned data mapping, entity modeling, and lifecycle management for bringing raw carrier data from ingestion through to the optimization engine.
+{{< portfolio-card title="Data Platform" link="https://www.optimaldynamics.com/resource/what-is-the-technology-stack-to-optimize-enterprise-trucking-companies" linkText="Technology stack →" >}}
+I was the architect of modernizing the company's data platform, which maps, ingests, and pulls together carrier data and operational systems into a unified decision-making platform. This foundation feeds every product in the Transportation Decision System, spanning data mapping, entity modeling, and lifecycle management from raw ingestion through to the optimization engine.
 {{< /portfolio-card >}}
 {{< /portfolio-grid >}}
 {{< /portfolio-section >}}

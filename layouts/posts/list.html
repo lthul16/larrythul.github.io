@@ -12,33 +12,40 @@
         <div class="blog-grid">
             {{- $pages := where .RegularPages "Params.hiddenInHomeList" "!=" "true" -}}
             {{- range $pages }}
+            {{- $url := .Params.external_url | default .Permalink -}}
+            {{- $external := .Params.external_url -}}
             <article class="blog-card">
                 <div class="blog-card__inner">
                     <header class="blog-card__header">
-                        {{- with .Params.tags }}
+                        {{- if or .Params.source .Params.tags }}
                         <div class="blog-card__tags">
-                            {{- range first 3 . }}
+                            {{- with .Params.source }}
                             <span class="tag-pill">{{ . }}</span>
+                            {{- end }}
+                            {{- with .Params.tags }}
+                            {{- range first 2 . }}
+                            <span class="tag-pill">{{ . }}</span>
+                            {{- end }}
                             {{- end }}
                         </div>
                         {{- end }}
                         <h2 class="blog-card__title">
-                            <a href="{{ .Permalink }}">{{ .Title }}</a>
+                            <a href="{{ $url }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .Title }}</a>
                         </h2>
                         {{- with .Description }}
                         <p class="blog-card__summary">{{ . }}</p>
-                        {{- else }}
-                        <p class="blog-card__summary">{{ .Summary | plainify | truncate 180 }}</p>
                         {{- end }}
                     </header>
                     <footer class="blog-card__footer">
+                        {{- if .Date }}
                         <time class="blog-card__date" datetime="{{ .Date.Format "2006-01-02" }}">
                             {{ .Date.Format "January 2, 2006" }}
                         </time>
-                        {{- if .Draft }}
-                        <span class="blog-card__status">Draft</span>
                         {{- end }}
-                        <a class="blog-card__link" href="{{ .Permalink }}" aria-label="Read {{ .Title }}">
+                        {{- if $external }}
+                        <span class="blog-card__status">External</span>
+                        {{- end }}
+                        <a class="blog-card__link" href="{{ $url }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }} aria-label="Read {{ .Title }}">
                             Read →
                         </a>
                     </footer>

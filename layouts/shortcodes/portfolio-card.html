@@ -17,11 +17,23 @@
       <p>{{ $body }}</p>
     {{- end -}}
   </div>
-  {{- with .Get "link" -}}
+  {{- if or (.Get "link") (.Get "link2") (.Get "link3") -}}
   <div class="portfolio-card__footer">
+    {{- with .Get "link" -}}
     <a class="portfolio-card__link" href="{{ . }}" target="_blank" rel="noopener noreferrer">
       {{ $.Get "linkText" | default "Learn more →" }}
     </a>
+    {{- end -}}
+    {{- with .Get "link2" -}}
+    <a class="portfolio-card__link" href="{{ . }}" target="_blank" rel="noopener noreferrer">
+      {{ $.Get "linkText2" | default "Learn more →" }}
+    </a>
+    {{- end -}}
+    {{- with .Get "link3" -}}
+    <a class="portfolio-card__link" href="{{ . }}" target="_blank" rel="noopener noreferrer">
+      {{ $.Get "linkText3" | default "Learn more →" }}
+    </a>
+    {{- end -}}
   </div>
   {{- end -}}
 </article>

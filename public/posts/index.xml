@@ -6,14 +6,14 @@
     <description>Recent content in Blog on Larry Thul</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 09 Jun 2026 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 01 Nov 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Post-Training with Reinforcement Learning and Verified Rewards</title>
-      <link>http://localhost:1313/posts/post-training-rl-verified-rewards/</link>
-      <pubDate>Tue, 09 Jun 2026 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/post-training-rl-verified-rewards/</guid>
-      <description>A tutorial walking through the history of reinforcement learning with verified rewards, what it&amp;#39;s used for, and simple code examples.</description>
+      <title>Employee Spotlight: Larry Thul</title>
+      <link>http://localhost:1313/posts/employee-spotlight-larry-thul/</link>
+      <pubDate>Fri, 01 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/employee-spotlight-larry-thul/</guid>
+      <description>An Optimal Dynamics employee spotlight on my path from Princeton and CASTLE Lab to leading the Statistics and Machine Learning team, rebuilding the data engine, and bringing agentic AI to the platform.</description>
     </item>
   </channel>
 </rss>
