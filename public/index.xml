@@ -2,10 +2,25 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Home on Larry Thul</title>
-    <link>https://larrythul.com/</link>
+    <link>http://localhost:1314/</link>
     <description>Recent content in Home on Larry Thul</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <atom:link href="https://larrythul.com/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 01 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1314/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Employee Spotlight: Larry Thul</title>
+      <link>http://localhost:1314/posts/employee-spotlight-larry-thul/</link>
+      <pubDate>Fri, 01 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/posts/employee-spotlight-larry-thul/</guid>
+      <description>An Optimal Dynamics employee spotlight on my path from Princeton and CASTLE Lab to leading the Statistics and Machine Learning team, rebuilding the data engine, and bringing agentic AI to the platform.</description>
+    </item>
+    <item>
+      <title>Bio</title>
+      <link>http://localhost:1314/bio/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/bio/</guid>
+      <description>&lt;p&gt;I enjoy turning AI research into production systems. My work lives at the intersection of stochastic optimization, AI, and machine learning applied to high-stakes physical world problems.  Throughout my career I&amp;rsquo;ve carried ideas the full distance, from a theorem on a whiteboard to production software making decisions on billions of dollars worth of freight per year. I work across the stack from doing reesarch to prove why an approach works, building the pipeline that ships it, and leading the team that takes it to market.&lt;/p&gt;</description>
+    </item>
   </channel>
 </rss>

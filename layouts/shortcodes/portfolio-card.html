@@ -1,0 +1,39 @@
+{{- $class := "portfolio-card" -}}
+{{- with .Get "variant" -}}
+  {{- $class = printf "portfolio-card portfolio-card--%s" . -}}
+{{- end -}}
+<article class="{{ $class }}">
+  {{- with .Get "status" -}}
+  <p class="portfolio-card__status">{{ . }}</p>
+  {{- end -}}
+  {{- with .Get "title" -}}
+  <h3>{{ . }}</h3>
+  {{- end -}}
+  <div class="portfolio-card__body">
+    {{- $body := .Inner | strings.TrimSpace | markdownify -}}
+    {{- if in $body "<p>" -}}
+      {{ $body }}
+    {{- else -}}
+      <p>{{ $body }}</p>
+    {{- end -}}
+  </div>
+  {{- if or (.Get "link") (.Get "link2") (.Get "link3") -}}
+  <div class="portfolio-card__footer">
+    {{- with .Get "link" -}}
+    <a class="portfolio-card__link" href="{{ . }}" target="_blank" rel="noopener noreferrer">
+      {{ $.Get "linkText" | default "Learn more →" }}
+    </a>
+    {{- end -}}
+    {{- with .Get "link2" -}}
+    <a class="portfolio-card__link" href="{{ . }}" target="_blank" rel="noopener noreferrer">
+      {{ $.Get "linkText2" | default "Learn more →" }}
+    </a>
+    {{- end -}}
+    {{- with .Get "link3" -}}
+    <a class="portfolio-card__link" href="{{ . }}" target="_blank" rel="noopener noreferrer">
+      {{ $.Get "linkText3" | default "Learn more →" }}
+    </a>
+    {{- end -}}
+  </div>
+  {{- end -}}
+</article>

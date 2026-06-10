@@ -1,0 +1,7 @@
+<li class="pub-item">
+  <a href="{{ .Get "url" }}">{{ .Get "title" }}</a>
+  {{- with .Get "venue" -}}
+  <span class="pub-venue">{{ . }}</span>
+  {{- end -}}
+  {{- .Inner -}}
+</li>

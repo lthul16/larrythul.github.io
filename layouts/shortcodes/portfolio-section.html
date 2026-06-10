@@ -1,0 +1,9 @@
+<section class="portfolio-section">
+  {{- with .Get "title" -}}
+  <h2>{{ . }}</h2>
+  {{- end -}}
+  {{- with .Get "intro" -}}
+  <p class="portfolio-section__intro">{{ . }}</p>
+  {{- end -}}
+  {{ .Inner }}
+</section>

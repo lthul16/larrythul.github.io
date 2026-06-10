@@ -1,0 +1,46 @@
+{{- define "main" }}
+{{- $pageType := "post" -}}
+{{- if eq .File.BaseFileName "bio" -}}
+    {{- $pageType = "bio" -}}
+{{- end -}}
+
+<article class="site-page site-page--{{ $pageType }}">
+    <header class="site-page__hero">
+        {{- with .Param "pageLabel" }}
+        <p class="site-page__label">{{ . }}</p>
+        {{- end }}
+        <h1 class="site-page__title">{{ .Title }}</h1>
+        {{- with .Description }}
+        <p class="site-page__lede">{{ . }}</p>
+        {{- end }}
+        {{- if and (eq $pageType "post") .Date (not (.Param "hideMeta")) }}
+        <p class="site-page__meta">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+            {{- with .Params.tags }}
+            <span class="site-page__meta-tags">
+                {{- range first 4 . }}
+                <span class="tag-pill">{{ . }}</span>
+                {{- end }}
+            </span>
+            {{- end }}
+        </p>
+        {{- end }}
+    </header>
+
+    <div class="site-page__body">
+        {{- if (.Param "ShowToc") }}
+        {{- partial "toc.html" . }}
+        {{- end }}
+
+        {{- if .Content }}
+        <div class="content-panel{{ with .Param "contentClass" }} {{ . }}{{ else }} content-prose{{ end }}">
+            {{- if not (.Param "disableAnchoredHeadings") }}
+            {{- partial "anchored_headings.html" .Content -}}
+            {{- else }}
+            {{ .Content }}
+            {{- end }}
+        </div>
+        {{- end }}
+    </div>
+</article>
+{{- end }}

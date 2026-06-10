@@ -1,18 +1,517 @@
-/* Homepage profile: bio (left) + photo & links (right) on wide screens; stacked on narrow */
+/* ── Design tokens ─────────────────────────────────────────────── */
+:root {
+    --site-bg: #f7f5f0;
+    --site-surface: rgba(255, 255, 255, 0.82);
+    --site-surface-strong: #ffffff;
+    --site-text: #1c2329;
+    --site-text-muted: #5a6570;
+    --site-accent: #1a5f7a;
+    --site-accent-hover: #0f4458;
+    --site-border: rgba(18, 24, 32, 0.08);
+    --site-shadow: 0 1px 2px rgba(18, 24, 32, 0.04), 0 8px 24px rgba(18, 24, 32, 0.04);
+    --site-radius: 14px;
+    --font-serif: "Newsreader", "Georgia", "Times New Roman", serif;
+    --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", "Menlo", "Monaco", monospace;
+    --content-width: 920px;
+    --page-width: 1080px;
+}
 
-/* No top header: avoid extra top offset that assumed nav height */
+/* Force readable light theme on inner pages */
+html[data-theme="light"],
+html[data-theme="auto"] {
+    --primary: var(--site-text) !important;
+    --secondary: var(--site-text-muted) !important;
+    --tertiary: rgba(18, 24, 32, 0.06) !important;
+    --content: var(--site-text) !important;
+    --entry: var(--site-surface-strong) !important;
+    --theme: var(--site-bg) !important;
+    --border: var(--site-border) !important;
+}
+
+body {
+    background-color: var(--site-bg) !important;
+    color: var(--site-text) !important;
+    font-family: var(--font-sans) !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header / nav ──────────────────────────────────────────────── */
+.header {
+    background: rgba(247, 245, 240, 0.92) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--site-border) !important;
+}
+
+.nav {
+    max-width: var(--page-width) !important;
+    margin: 0 auto !important;
+}
+
+.nav--no-logo {
+    justify-content: flex-start !important;
+}
+
+.nav--no-logo #menu {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#menu a {
+    font-family: var(--font-sans) !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: var(--site-text-muted) !important;
+}
+
+#menu a span.active,
+#menu a:hover {
+    color: var(--site-accent) !important;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+#menu a span.active {
+    font-weight: 600 !important;
+}
+
+
+/* ── Main layout ───────────────────────────────────────────────── */
+main.main {
+    max-width: var(--page-width) !important;
+    padding: 1.5rem clamp(1.25rem, 4vw, 2rem) 3rem !important;
+}
+
+main.main:has(.profile) {
+    max-width: min(1400px, calc(100vw - 2 * var(--gap, 24px))) !important;
+    padding: 0.35rem var(--gap, 24px) var(--gap, 24px) !important;
+}
+
+/* ── Content pages (bio, portfolio, blog, posts) ───────────────── */
+.site-page {
+    width: 100%;
+    max-width: var(--page-width);
+    margin: 0 auto;
+}
+
+.site-page__hero {
+    margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+    padding-bottom: clamp(1rem, 2vw, 1.5rem);
+    border-bottom: 1px solid var(--site-border);
+}
+
+.site-page__label {
+    margin: 0 0 0.5rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--site-accent);
+}
+
+.site-page__title {
+    margin: 0 0 0.65rem 0 !important;
+    font-family: var(--font-serif) !important;
+    font-size: clamp(2.25rem, 5vw, 3.25rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.02em;
+    color: var(--site-text) !important;
+}
+
+.site-page__lede {
+    margin: 0;
+    max-width: 42rem;
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    line-height: 1.6;
+    color: var(--site-text-muted);
+}
+
+.site-page__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1rem;
+    margin: 0.85rem 0 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--site-text-muted);
+}
+
+.site-page__meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.content-panel {
+    background: var(--site-surface);
+    border: 1px solid var(--site-border);
+    border-radius: var(--site-radius);
+    box-shadow: var(--site-shadow);
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.content-panel--empty {
+    text-align: center;
+    color: var(--site-text-muted);
+}
+
+/* ── Prose typography ──────────────────────────────────────────── */
+.content-prose {
+    font-family: var(--font-sans);
+    font-size: 1.02rem;
+    line-height: 1.72;
+    color: var(--site-text);
+}
+
+.content-prose p {
+    margin: 0 0 1.1em 0;
+    color: var(--site-text);
+}
+
+.content-prose p:last-child {
+    margin-bottom: 0;
+}
+
+.content-prose h2,
+.content-prose h3,
+.content-prose h4 {
+    font-family: var(--font-serif);
+    color: var(--site-text);
+    letter-spacing: -0.01em;
+}
+
+.content-prose h2 {
+    font-size: 1.5rem;
+    margin: 2rem 0 0.75rem;
+}
+
+.content-prose h3 {
+    font-size: 1.2rem;
+    margin: 1.5rem 0 0.5rem;
+}
+
+.content-prose a {
+    color: var(--site-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.content-prose a:hover {
+    color: var(--site-accent-hover);
+}
+
+.content-prose ul,
+.content-prose ol {
+    margin: 0.75em 0 1.1em;
+    padding-left: 1.35rem;
+}
+
+.content-prose li {
+    margin: 0.4em 0;
+}
+
+.content-prose em {
+    font-style: italic;
+    color: var(--site-text-muted);
+}
+
+.content-prose strong {
+    font-weight: 600;
+    color: var(--site-text);
+}
+
+/* ── Portfolio ─────────────────────────────────────────────────── */
+.portfolio-prose .portfolio-section {
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.portfolio-prose .portfolio-section:last-child {
+    margin-bottom: 0;
+}
+
+.portfolio-prose .portfolio-section > h2 {
+    margin: 0 0 0.75rem 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+    font-weight: 500;
+    color: var(--site-text);
+    letter-spacing: -0.01em;
+}
+
+.portfolio-section__intro {
+    margin: 0 0 1.25rem 0 !important;
+    max-width: 52rem;
+    color: var(--site-text-muted) !important;
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+}
+
+.portfolio-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.portfolio-card {
+    background: var(--site-surface-strong);
+    border: 1px solid var(--site-border);
+    border-radius: 12px;
+    padding: 1.25rem 1.35rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portfolio-card:hover {
+    border-color: rgba(26, 95, 122, 0.2);
+    box-shadow: 0 4px 16px rgba(18, 24, 32, 0.06);
+}
+
+.portfolio-card--wide {
+    grid-column: 1 / -1;
+}
+
+.portfolio-card--stub {
+    max-width: 36rem;
+    background: linear-gradient(135deg, rgba(26, 95, 122, 0.04), rgba(255, 255, 255, 0.9));
+}
+
+.portfolio-card h3 {
+    margin: 0 0 0.65rem 0 !important;
+    font-family: var(--font-serif) !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+    color: var(--site-text) !important;
+}
+
+.portfolio-card__body {
+    margin-top: 0.15rem;
+}
+
+.portfolio-card__body p {
+    margin: 0 0 0.85rem 0 !important;
+    font-size: 0.94rem !important;
+    line-height: 1.62 !important;
+    color: var(--site-text-muted) !important;
+}
+
+.portfolio-card__body p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.portfolio-card__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--site-border);
+}
+
+.portfolio-card__status {
+    display: inline-block;
+    margin: 0 0 0.65rem 0 !important;
+    padding: 0.2rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem !important;
+    font-style: normal !important;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--site-accent) !important;
+    background: rgba(26, 95, 122, 0.08);
+    border-radius: 4px;
+}
+
+.portfolio-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--site-accent) !important;
+    text-decoration: none !important;
+}
+
+.portfolio-card__link:hover {
+    color: var(--site-accent-hover) !important;
+    text-decoration: underline !important;
+}
+
+/* Publication lists */
+.pub-list {
+    list-style: none !important;
+    margin: 1rem 0 0 0 !important;
+    padding: 0 !important;
+}
+
+.pub-item {
+    margin: 0 0 0.85rem 0 !important;
+    padding: 0.85rem 1rem;
+    background: rgba(18, 24, 32, 0.025);
+    border-left: 3px solid var(--site-accent);
+    border-radius: 0 8px 8px 0;
+}
+
+.pub-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.pub-item a {
+    display: block;
+    font-weight: 500;
+    color: var(--site-text) !important;
+    text-decoration: none !important;
+    line-height: 1.4;
+}
+
+.pub-item a:hover {
+    color: var(--site-accent) !important;
+}
+
+.pub-venue {
+    display: block;
+    margin-top: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--site-text-muted);
+}
+
+.pub-list--standalone {
+    margin-top: 0.5rem !important;
+}
+
+/* ── Blog index ────────────────────────────────────────────────── */
+.blog-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.blog-card {
+    background: var(--site-surface);
+    border: 1px solid var(--site-border);
+    border-radius: var(--site-radius);
+    box-shadow: var(--site-shadow);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.blog-card:hover {
+    border-color: rgba(26, 95, 122, 0.22);
+    box-shadow: 0 6px 20px rgba(18, 24, 32, 0.07);
+    transform: translateY(-1px);
+}
+
+.blog-card__inner {
+    padding: clamp(1.25rem, 2.5vw, 1.65rem);
+}
+
+.blog-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.tag-pill {
+    display: inline-block;
+    padding: 0.18rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--site-accent);
+    background: rgba(26, 95, 122, 0.08);
+    border-radius: 999px;
+}
+
+.blog-card__title {
+    margin: 0 0 0.55rem 0 !important;
+    font-family: var(--font-serif) !important;
+    font-size: clamp(1.2rem, 2vw, 1.45rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+}
+
+.blog-card__title a {
+    color: var(--site-text) !important;
+    text-decoration: none !important;
+}
+
+.blog-card__title a:hover {
+    color: var(--site-accent) !important;
+}
+
+.blog-card__summary {
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    color: var(--site-text-muted) !important;
+}
+
+.blog-card__footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--site-border);
+}
+
+.blog-card__date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--site-text-muted);
+}
+
+.blog-card__status {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--site-accent);
+}
+
+.blog-card__link {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--site-accent) !important;
+    text-decoration: none !important;
+}
+
+.blog-card__link:hover {
+    text-decoration: underline !important;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.site-footer {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 1.5rem 0 2rem !important;
+    font-size: 0.82rem !important;
+    color: var(--site-text-muted) !important;
+    border-top: 1px solid var(--site-border);
+}
+
+.site-footer a {
+    color: var(--site-text-muted) !important;
+}
+
+.site-footer a:hover {
+    color: var(--site-accent) !important;
+}
+
+/* ── Homepage profile (preserve existing layout) ───────────────── */
 .no-site-header {
     --header-height: 0px;
 }
 
-/* PaperMod caps .main at ~720px (--main-width) and centers .profile — widen only the profile homepage */
-main.main:has(.profile) {
-    max-width: min(1400px, calc(100vw - 2 * var(--gap, 24px))) !important;
-    /* Theme uses padding: var(--gap) on .main — pull content closer to the header */
-    padding: 0.35rem var(--gap, 24px) var(--gap, 24px) !important;
-}
-
-/* Let the profile block use full main width (theme uses flex + center, which shrinks content) */
 .main .profile {
     width: 100% !important;
     max-width: 100% !important;
@@ -22,15 +521,8 @@ main.main:has(.profile) {
     min-height: auto !important;
 }
 
-/* Theme sets .profile .profile_inner { align-items: center } — override so columns can breathe */
 .profile .profile_inner {
     align-items: stretch !important;
-}
-
-body {
-    background-color: #f9f8f4 !important;
-    font-family: "JetBrains Mono", "Menlo", "Monaco", monospace !important;
-    color: #333;
 }
 
 .profile_inner {
@@ -47,10 +539,10 @@ body {
 
 .profile_bio_panel,
 .profile_side_panel {
-    background: rgba(255, 255, 255, 0.55);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    background: var(--site-surface);
+    border: 1px solid var(--site-border);
+    border-radius: var(--site-radius);
+    box-shadow: var(--site-shadow);
 }
 
 .profile_bio_panel {
@@ -72,28 +564,43 @@ body {
 
 .profile_title {
     margin: 0 0 1rem 0 !important;
-    font-size: clamp(1.5rem, 2.5vw, 2rem) !important;
-    line-height: 1.25 !important;
+    font-family: var(--font-serif) !important;
+    font-size: clamp(1.75rem, 3vw, 2.35rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
     text-align: center;
+    color: var(--site-text) !important;
 }
 
 .profile_bio {
     text-align: left;
-    font-size: clamp(0.82rem, 1vw, 0.92rem) !important;
-    line-height: 1.62 !important;
+    font-family: var(--font-sans) !important;
+    font-size: clamp(0.95rem, 1.1vw, 1.02rem) !important;
+    line-height: 1.68 !important;
+    color: var(--site-text) !important;
 }
 
 .profile_bio p {
     margin: 0 0 0.85em 0 !important;
     line-height: inherit !important;
     font-size: inherit !important;
+    color: var(--site-text) !important;
 }
 
 .profile_bio p:last-child {
     margin-bottom: 0 !important;
 }
 
-/* Lists: keep markers inside the same horizontal band as paragraph text */
+.profile_bio a {
+    color: var(--site-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.profile_bio a:hover {
+    color: var(--site-accent-hover);
+}
+
 .profile_bio ul,
 .profile_bio ol {
     margin: 0.55em 0 0.9em !important;
@@ -108,12 +615,6 @@ body {
     font-size: inherit !important;
 }
 
-.profile_bio ul ul,
-.profile_bio ol ol {
-    margin-top: 0.35em !important;
-    margin-bottom: 0.35em !important;
-}
-
 .profile_bio_panel .social-icons {
     margin-top: 1.25rem;
     justify-content: flex-start;
@@ -124,7 +625,6 @@ body {
     max-width: min(340px, 88vw);
 }
 
-/* Theme uses .profile img { border-radius: 50% } — square crop reads better here */
 .profile .profile_image_frame img {
     display: block;
     width: 100%;
@@ -151,6 +651,9 @@ body {
     width: 100%;
     justify-content: center;
     text-align: center;
+    font-family: var(--font-sans) !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
 }
 
 @media (min-width: 900px) {
@@ -161,7 +664,6 @@ body {
         gap: clamp(1.5rem, 3vw, 2.5rem) !important;
     }
 
-    /* Bio column grows; photo column is capped narrow so text gets more width */
     .profile_bio_panel {
         order: 1;
         flex: 1 1 0;
@@ -179,8 +681,29 @@ body {
     .profile_title {
         text-align: left !important;
     }
+}
 
-    .profile_bio_panel .social-icons {
-        justify-content: flex-start;
-    }
+/* Hide PaperMod post chrome we replaced */
+.site-page .post-header,
+.site-page .post-meta,
+.site-page .breadcrumbs,
+.site-page .post-footer {
+    display: none !important;
+}
+
+/* TOC on blog posts */
+.site-page--post .toc {
+    background: var(--site-surface-strong);
+    border: 1px solid var(--site-border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.site-page--post .toc .details {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--site-text-muted);
 }

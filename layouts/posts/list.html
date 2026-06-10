@@ -1,0 +1,62 @@
+{{- define "main" }}
+<article class="site-page site-page--blog">
+    <header class="site-page__hero">
+        <p class="site-page__label">Writing</p>
+        <h1 class="site-page__title">{{ .Title }}</h1>
+        {{- with .Description }}
+        <p class="site-page__lede">{{ . }}</p>
+        {{- end }}
+    </header>
+
+    <div class="site-page__body">
+        <div class="blog-grid">
+            {{- $pages := where .RegularPages "Params.hiddenInHomeList" "!=" "true" -}}
+            {{- range $pages }}
+            {{- $url := .Params.external_url | default .Permalink -}}
+            {{- $external := .Params.external_url -}}
+            <article class="blog-card">
+                <div class="blog-card__inner">
+                    <header class="blog-card__header">
+                        {{- if or .Params.source .Params.tags }}
+                        <div class="blog-card__tags">
+                            {{- with .Params.source }}
+                            <span class="tag-pill">{{ . }}</span>
+                            {{- end }}
+                            {{- with .Params.tags }}
+                            {{- range first 2 . }}
+                            <span class="tag-pill">{{ . }}</span>
+                            {{- end }}
+                            {{- end }}
+                        </div>
+                        {{- end }}
+                        <h2 class="blog-card__title">
+                            <a href="{{ $url }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .Title }}</a>
+                        </h2>
+                        {{- with .Description }}
+                        <p class="blog-card__summary">{{ . }}</p>
+                        {{- end }}
+                    </header>
+                    <footer class="blog-card__footer">
+                        {{- if .Date }}
+                        <time class="blog-card__date" datetime="{{ .Date.Format "2006-01-02" }}">
+                            {{ .Date.Format "January 2, 2006" }}
+                        </time>
+                        {{- end }}
+                        {{- if $external }}
+                        <span class="blog-card__status">External</span>
+                        {{- end }}
+                        <a class="blog-card__link" href="{{ $url }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }} aria-label="Read {{ .Title }}">
+                            Read →
+                        </a>
+                    </footer>
+                </div>
+            </article>
+            {{- else }}
+            <div class="content-panel content-panel--empty">
+                <p>No posts yet. Check back soon.</p>
+            </div>
+            {{- end }}
+        </div>
+    </div>
+</article>
+{{- end }}

@@ -2,10 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://larrythul.com/categories/</loc>
+    <loc>http://localhost:1314/posts/</loc>
+    <lastmod>2024-11-01T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://larrythul.com/</loc>
+    <loc>http://localhost:1314/posts/employee-spotlight-larry-thul/</loc>
+    <lastmod>2024-11-01T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://larrythul.com/tags/</loc>
+    <loc>http://localhost:1314/</loc>
+    <lastmod>2024-11-01T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1314/bio/</loc>
+  </url><url>
+    <loc>http://localhost:1314/categories/</loc>
+  </url><url>
+    <loc>http://localhost:1314/portfolio/</loc>
+  </url><url>
+    <loc>http://localhost:1314/tags/</loc>
   </url>
 </urlset>

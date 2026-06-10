@@ -5,18 +5,25 @@ title = 'Larry Thul'
 # alternatively use Hugo Modules: hugo mod init <module-path> && hugo mod get github.com/adityatelange/hugo-PaperMod
 theme = 'PaperMod'
 
+defaultTheme = "light"
+
 [params]
     env = "production"
     title = "Larry Thul"
-    # Hide the top nav bar (logo, menu, theme toggle). Use profile buttons for links instead.
-    hideSiteHeader = true
+    hideSiteHeader = false
+    disableThemeToggle = true
     # Eggshell white background hex: #F0EAD6 or #F9F8F4
     # We will apply the font via CSS, but let's set the theme colors here
-    labelIcon = " "
-    
+    [params.assets]
+        favicon = "/favicon.svg"
+        favicon16x16 = "/favicon.svg"
+        favicon32x32 = "/favicon.svg"
+        apple_touch_icon = "/favicon.svg"
+        safari_pinned_tab = "/favicon.svg"
+
     [params.profileMode]
         enabled = true
-        title = "Lawrence Thul, PhD"
+        title = "Lawrence Thul"
         # Bio text lives in content/_index.md (easier to edit). Optional fallback if that file is empty:
         # subtitle = "Short bio here…"
         # assets/ path so Hugo can process/resize; static/ copy kept for direct URLs if needed
@@ -30,7 +37,34 @@ theme = 'PaperMod'
         [[params.profileMode.buttons]]
             name = "Google Scholar"
             url = "https://scholar.google.com/citations?user=IWecxBMAAAAJ"
-        # Internal pages use root-relative paths (no https://), e.g. url = "/posts/"
-        # [[params.profileMode.buttons]]
-        #     name = "Blog"
-        #     url = "/posts/"
+        [[params.profileMode.buttons]]
+            name = "Bio"
+            url = "/bio/"
+        [[params.profileMode.buttons]]
+            name = "Portfolio"
+            url = "/portfolio/"
+        [[params.profileMode.buttons]]
+            name = "Blog"
+            url = "/posts/"
+
+[menu]
+    [[menu.main]]
+        identifier = "home"
+        name = "Home"
+        url = "/"
+        weight = 10
+    [[menu.main]]
+        identifier = "bio"
+        name = "Bio"
+        url = "/bio/"
+        weight = 20
+    [[menu.main]]
+        identifier = "portfolio"
+        name = "Portfolio"
+        url = "/portfolio/"
+        weight = 30
+    [[menu.main]]
+        identifier = "blog"
+        name = "Blog"
+        url = "/posts/"
+        weight = 40
