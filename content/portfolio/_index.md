@@ -11,7 +11,7 @@ I am currently studying LLM post-training and reinforcement learning algorithms.
 
 {{< portfolio-section title="Optimal Dynamics" intro="During five years as Director of AI, I built and led the technical foundations behind many products within Optimal Dynamics' Transportation Decision System, bridging CASTLE Lab research with production-scale freight optimization." >}}
 {{< portfolio-grid >}}
-{{< portfolio-card title="Decision-Native Agents" link="https://www.optimaldynamics.com/platform/agentic-automation" linkText="Product page →" link2="https://www.optimaldynamics.com/resource/ai-hype-to-decision-native-reality-daniel-powell-discusses-scale-on-what-the-truck" linkText2="Scale overview →" >}}
+{{< portfolio-card title="Decision-Native Agents" link="https://www.optimaldynamics.com/platform/agentic-automation" linkText="Product page →" link2="https://www.optimaldynamics.com/resource/ai-hype-to-decision-native-reality-daniel-powell-discusses-scale-on-what-the-truck" linkText2="Scale overview →" link3="https://www.accessnewswire.com/newsroom/en/transportation/optimal-dynamics-launches-scale-the-first-decision-native-agentic-systemtm-built-to-1142148" linkText3="Scale launch →" >}}
 I pioneered the agentic orchestration layer at Optimal Dynamics. Atlas, the Agentic Automation Layer, turns optimization outputs into coordinated, autonomous action. Rather than reactive task-takers following simple scripts, these decision-native agents are powered by the core optimization engine and understand the full complexity of the network.
 {{< /portfolio-card >}}
 
