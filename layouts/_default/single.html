@@ -10,8 +10,8 @@
         <p class="site-page__label">{{ . }}</p>
         {{- end }}
         <h1 class="site-page__title">{{ .Title }}</h1>
-        {{- with .Description }}
-        <p class="site-page__lede">{{ . }}</p>
+        {{- if and (ne $pageType "post") .Description }}
+        <p class="site-page__lede">{{ .Description }}</p>
         {{- end }}
         {{- if and (eq $pageType "post") .Date (not (.Param "hideMeta")) }}
         <p class="site-page__meta">

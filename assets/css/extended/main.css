@@ -223,6 +223,51 @@ main.main:has(.profile) {
     color: var(--site-text);
 }
 
+.content-prose img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 1.4rem auto;
+    border: 1px solid var(--site-border);
+    border-radius: 8px;
+}
+
+.content-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.4rem 0;
+    font-size: 0.95em;
+}
+
+.content-prose th,
+.content-prose td {
+    border: 1px solid var(--site-border);
+    padding: 0.45rem 0.7rem;
+    text-align: left;
+}
+
+.content-prose th {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.content-prose .math-block {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 1.4rem 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.content-prose .math-block .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0;
+    padding: 0.15rem 0;
+}
+
+.content-prose .math-block .katex-display > .katex {
+    max-width: none;
+}
+
 /* ── Portfolio ─────────────────────────────────────────────────── */
 .portfolio-prose .portfolio-section {
     margin-bottom: clamp(2rem, 4vw, 3rem);

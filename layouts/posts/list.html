@@ -10,8 +10,9 @@
 
     <div class="site-page__body">
         <div class="blog-grid">
-            {{- $pages := where .RegularPages "Params.hiddenInHomeList" "!=" "true" -}}
-            {{- range $pages }}
+            {{- $pages := where site.RegularPages "Section" "posts" -}}
+            {{- $pages = where $pages "Params.hiddenInHomeList" "ne" true -}}
+            {{- range $pages.ByDate.Reverse }}
             {{- $url := .Params.external_url | default .Permalink -}}
             {{- $external := .Params.external_url -}}
             <article class="blog-card">

@@ -1,0 +1,6 @@
+# Local preview overrides. Use with:
+#   hugo server --config hugo.toml,hugo.dev.toml --disableFastRender
+baseURL = "http://localhost:1313/"
+
+[params]
+env = "development"
