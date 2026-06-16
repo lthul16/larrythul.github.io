@@ -2,24 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Blog on Larry Thul</title>
-    <link>http://localhost:1313/posts/</link>
+    <link>http://localhost:51637/posts/</link>
     <description>Recent content in Blog on Larry Thul</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 08 Jun 2026 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Bringing LLM-Style RLVR to Time-Series Forecasting (Part 1)</title>
-      <link>http://localhost:1313/posts/bringing-llm-style-rlvr-to-forecasting-part-1/</link>
-      <pubDate>Mon, 08 Jun 2026 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/bringing-llm-style-rlvr-to-forecasting-part-1/</guid>
-      <description>Building a market forecaster from first principles as a discrete token policy, so the reinforcement learning that post-trains language models can post-train it to seek alpha.</description>
-    </item>
+    <lastBuildDate>Fri, 01 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:51637/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Employee Spotlight: Larry Thul</title>
-      <link>http://localhost:1313/posts/employee-spotlight-larry-thul/</link>
+      <link>http://localhost:51637/posts/employee-spotlight-larry-thul/</link>
       <pubDate>Fri, 01 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/employee-spotlight-larry-thul/</guid>
+      <guid>http://localhost:51637/posts/employee-spotlight-larry-thul/</guid>
       <description>An Optimal Dynamics employee spotlight on my path from Princeton and CASTLE Lab to leading the Statistics and Machine Learning team, rebuilding the data engine, and bringing agentic AI to the platform.</description>
     </item>
   </channel>

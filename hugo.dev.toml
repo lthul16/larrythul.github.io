@@ -4,3 +4,6 @@ baseURL = "http://localhost:1313/"
 
 [params]
 env = "development"
+
+# Blog posts authored in ls-research are synced into content/ as real files by
+# scripts/sync-blog.sh, so local dev builds the same bundle CI does — no mounts needed.

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>A Learned Alphabet for Market Signals: Tokenizing Time Series for LLM-Style Forecasting | Larry Thul</title>
+<meta name="keywords" content="forecasting, tokenization, time-series, reinforcement-learning, transformers, post-training">
+<meta name="description" content="An idea for tokenizing time series into a discrete, learned vocabulary of signal shapes that turns market data into tokens an LLM-style stack can consume, tested by pretraining an autoregressive model on held-out data. RLVR for alpha is noted as a possible future direction the discrete design opens up.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.ed3a167be5fc1e6011c5f1e72328c5c21601698b67af289119f23514676ad3a1.css" integrity="sha256-7ToWe&#43;X8HmARxfHnIyjFwhYBaYtnryiRGfI1FGdq06E=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon.svg">
+<link rel="apple-touch-icon" href="http://localhost:1313/favicon.svg">
+<link rel="mask-icon" href="http://localhost:1313/favicon.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+
+
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav nav--no-logo">
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/bio/" title="Bio">
+                    <span>Bio</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/portfolio/" title="Portfolio">
+                    <span>Portfolio</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Blog">
+                    <span>Blog</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+    <main class="main"><article class="site-page site-page--post">
+    <header class="site-page__hero">
+        <h1 class="site-page__title">A Learned Alphabet for Market Signals: Tokenizing Time Series for LLM-Style Forecasting</h1>
+        <p class="site-page__meta">
+            <time datetime="2026-06-08">June 8, 2026</time>
+            <span class="site-page__meta-tags">
+                <span class="tag-pill">forecasting</span>
+                <span class="tag-pill">tokenization</span>
+                <span class="tag-pill">time-series</span>
+                <span class="tag-pill">reinforcement-learning</span>
+            </span>
+        </p>
+    </header>
+
+    <div class="site-page__body"><div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#what-a-forecaster-actually-has-to-do" aria-label="What a forecaster actually has to do">What a forecaster actually has to do</a></li>
+                <li>
+                    <a href="#where-the-standard-recipe-stops-short" aria-label="Where the standard recipe stops short">Where the standard recipe stops short</a></li>
+                <li>
+                    <a href="#the-core-move-a-learned-alphabet-for-market-signal" aria-label="The core move: a learned alphabet for market signal">The core move: a learned alphabet for market signal</a><ul>
+                        
+                <li>
+                    <a href="#normalize-first-so-one-vocabulary-can-span-every-instrument" aria-label="Normalize first, so one vocabulary can span every instrument">Normalize first, so one vocabulary can span every instrument</a></li>
+                <li>
+                    <a href="#quantize-the-shape-with-a-learned-codebook-not-a-projection" aria-label="Quantize the shape with a learned codebook, not a projection">Quantize the shape with a learned codebook, not a projection</a></li>
+                <li>
+                    <a href="#the-levels-become-tokens-too" aria-label="The levels become tokens too">The levels become tokens too</a></li></ul>
+                </li>
+                <li>
+                    <a href="#hundreds-of-series-in-one-sequence" aria-label="Hundreds of series in one sequence">Hundreds of series in one sequence</a></li>
+                <li>
+                    <a href="#predicting-the-next-group-and-reading-a-forecast-off-samples" aria-label="Predicting the next group, and reading a forecast off samples">Predicting the next group, and reading a forecast off samples</a></li>
+                <li>
+                    <a href="#testing-the-idea-where-pretraining-stands" aria-label="Testing the idea: where pretraining stands">Testing the idea: where pretraining stands</a></li>
+                <li>
+                    <a href="#a-direction-this-opens-up-rl-for-alpha" aria-label="A direction this opens up: RL for alpha">A direction this opens up: RL for alpha</a></li>
+                <li>
+                    <a href="#the-dictionary" aria-label="The dictionary">The dictionary</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+        <div class="content-panel content-prose"><p><em>Revised on June 15, 2026.</em></p>
+<p>I have spent much of my career building time-series forecasting systems: hierarchical tree
+models, gradient boosting, and more recently the transformer-based forecasters such as Chronos
+and PatchTST. They work well within their limits. What kept my attention, though, is where the
+fastest progress in machine learning has actually accumulated. The deepest investment in
+tooling, infrastructure, scaling laws, and post-training methods has gone into large language
+models, and the research environment around them is simply more mature than the one around
+forecasting.</p>
+<p>This post explores a question that follows directly from that observation. What would it take
+to give a market forecaster the same structure as a language model, so that the machinery built
+for LLMs applies to forecasting directly rather than by analogy? The two are already closely
+related. A decoder-only language model and an autoregressive forecaster are the same machine at
+heart: a causal transformer predicting the next symbol from the past. The backbone, the
+attention mask, and the softmax head carry over unchanged. The one thing that does not carry
+over is the alphabet. A language model consumes a discrete vocabulary of word-pieces; a
+forecaster consumes continuous numbers. So the problem reduces to a concrete question: what is
+the right discrete vocabulary for market signal, and how do we turn a few hundred raw price
+series into tokens an LLM-style stack can read and write?</p>
+<p>That tokenizer is the contribution of this post. The central design choice is to represent each
+short window of a series not as a linear projection into a continuous space, which is the
+standard patch-embedding recipe, but as a discrete code drawn from a learned codebook of
+recurring signal shapes. A learned, discrete vocabulary has real advantages over a continuous
+projection. It spends representational capacity on the shapes the data actually contains rather
+than on a fixed basis, it gives every emitted symbol an exact probability, and it keeps the
+model&rsquo;s output a finite set of actions instead of a single point or a parametric curve. That
+last property matters most to me, because it is what makes the model a <em>policy</em>, the precise
+object that reinforcement learning from verifiable rewards is built to optimize, which is a
+direction the discrete design opens up.</p>
+<p>I reason through that alphabet from first principles. I start from what a forecaster has
+to do, show where the standard recipe stops short, and let each requirement introduce one piece
+of the design, until a patch of market data serializes into tokens the way a chunk of text
+serializes into word-pieces. To test whether the idea works, I pretrain an autoregressive model
+on top of these tokens and ask whether the discrete learned vocabulary supports a calibrated
+model on data it never trained on, no more and no less. And RLVR, the kind of optimization the
+discrete design is built for, is laid out at the end as a possible future direction, a
+speculative one that may or may not pan out.</p>
+<p><img alt="A language model consuming word-piece tokens beside the same decoder-only transformer consuming signal token groups; identical backbone, different alphabet" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_llm_parallel.png"></p>
+<p>The design in one picture, resting entirely on the alphabet. A decoder-only language model and
+an autoregressive forecaster are the same machine: a causal transformer predicting the next
+symbol from the past. The backbone, the mask, and the softmax head are shared. The only thing
+to invent is the symbol set, the tokenized market signal that replaces word-pieces, which is
+what this post builds.</p>
+<hr>
+<h2 id="what-a-forecaster-actually-has-to-do">What a forecaster actually has to do<a hidden class="anchor" aria-hidden="true" href="#what-a-forecaster-actually-has-to-do">#</a></h2>
+<p>Strip the problem down. I observe a price series, or a few hundred of them, and I want to say
+something useful about the future. Three requirements survive that stripping, and each one
+will force a design decision later, so I want them on the table first.</p>
+<p>I need a distribution, not a number. A point estimate of tomorrow&rsquo;s return is close to
+useless on its own, because the entire game is the shape of the cone of outcomes and where
+its mass sits. Whatever the model emits, I have to be able to compute quantiles, intervals,
+and calibration from it.</p>
+<p>I need to use many series at once. Assets move together. A forecast for one name that
+ignores the hundred correlated names trading beside it throws away most of the information in
+the tape. The model has to read a cross-section.</p>
+<p>I need no look-ahead, ever. The moment a forecast sizes a position, any leakage of future
+information becomes unrecoverable and quietly inflates every backtest I run. Causality has to
+be enforced by the architecture, not by my good intentions.</p>
+<p>Hold those three. The rest of the post earns them one at a time.</p>
+<hr>
+<h2 id="where-the-standard-recipe-stops-short">Where the standard recipe stops short<a hidden class="anchor" aria-hidden="true" href="#where-the-standard-recipe-stops-short">#</a></h2>
+<p>The obvious starting point is the recipe patch-based time-series transformers already use,
+the PatchTST and Chronos lineage. Chop each series into fixed-length patches of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span> days
+(here <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">N=5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span>), project each patch through a linear map into the model dimension, run a
+transformer, attach a
+regression or Gaussian head. It works. It is also where the constraint of staying structurally
+identical to a language model starts to bite, in two places.</p>
+<p>The first problem is the input. A linear patch embedding is a fixed, content-blind basis.
+Every patch, whether it is a sleepy drift or a once-a-year volatility shock, goes through the
+same projection and gets the same share of representational budget. A language model does the
+opposite. Its tokenizer spends short codes on common pieces and keeps expressive structure
+for rare ones, and crucially the embedding table is learned, so representation follows the
+data. I want that for signal shapes. I want a quiet <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>-day drift and a gap-up to be
+genuinely different tokens, not two points in the same linear subspace.</p>
+<p>The second problem is the output, and here I want to be careful not to overstate the case. A
+regression head gives a point. A Gaussian head gives a parametric interval. A quantile head
+gives several. A Gaussian or a quantile head is already samplable
+and already trainable by policy gradient. Continuous policies do reinforcement learning
+perfectly well, and discreteness is not a mathematical prerequisite for any of it. I want to
+say that plainly because the opposite is an easy thing to imply.</p>
+<p>So the case for going discrete is an engineering one, not a theorem. A finite vocabulary with
+an exact softmax gives every action an exact log-probability, freezes the action space into
+something stable to optimize against, and lets the entire LLM reinforcement-learning and
+serving stack apply unchanged. That is worth a great deal. It is also not free: quantizing a
+continuous shape introduces reconstruction error, and on a signal whose daily directional edge
+is already tiny, that quantization error is a real cost rather than a rounding detail. The
+round-trip NMSE I report later is small in absolute terms, but not obviously small relative to
+the size of the edge I am hunting. I take the trade deliberately, with the price in view.</p>
+<p>Both problems point the same way, and the first one is the one this post is really about.
+Replace the linear patch map with a learned, discrete vocabulary of signal shapes, and keep
+everything downstream discrete so the output stays a clean token policy. That one decision, the
+alphabet, is the heart of the model and the contribution of this post, so it gets the longest
+section.</p>
+<hr>
+<h2 id="the-core-move-a-learned-alphabet-for-market-signal">The core move: a learned alphabet for market signal<a hidden class="anchor" aria-hidden="true" href="#the-core-move-a-learned-alphabet-for-market-signal">#</a></h2>
+<p>This is the contribution of this post, so I&rsquo;m going to take it slowly and earn each piece. I want
+to turn a patch of a series into a token, the way a tokenizer turns a chunk of text
+into a word-piece. Doing that on raw returns fails for a reason worth stating, because the
+fix is the first real piece of the architecture.</p>
+<h3 id="normalize-first-so-one-vocabulary-can-span-every-instrument">Normalize first, so one vocabulary can span every instrument<a hidden class="anchor" aria-hidden="true" href="#normalize-first-so-one-vocabulary-can-span-every-instrument">#</a></h3>
+<p>An <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>-day window of ten-year-yield returns and an <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>-day window of crypto returns differ in
+volatility by one to two orders of magnitude. A single codebook fit on both would waste most
+of its capacity encoding scale rather than shape. So I factor scale out before quantizing.</p>
+<p>Let <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">P_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> be the price and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>t</mi></msub><mo>=</mo><mi>log</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>P</mi><mi>t</mi></msub><mi mathvariant="normal">/</mi><msub><mi>P</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">r_t = \log(P_t / P_{t-1})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span> the log return. I divide by a
+trailing, lagged volatility estimate <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover accent="true"><mi>σ</mi><mo>^</mo></mover><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\hat{\sigma}_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">^</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, an exponentially weighted moving
+average over returns strictly before <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span>, to get a vol-normalized return</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mtext>  </mtext><mo>=</mo><mtext>  </mtext><mfrac><msub><mi>r</mi><mi>t</mi></msub><mrow><msub><mover accent="true"><mi>σ</mi><mo>^</mo></mover><mi>t</mi></msub><mo>+</mo><mi>ϵ</mi></mrow></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+x_t \;=\; \frac{r_t}{\hat{\sigma}_t + \epsilon}.
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.9436em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1076em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">^</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">ϵ</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span></div><p>That puts a bond and a coin on the same footing. Then I z-score the patch itself. With patch
+mean <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">μ</span></span></span></span> and patch standard deviation <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> taken over the normalized values, the
+shape is</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>x</mi><mo>^</mo></mover><mtext>  </mtext><mo>=</mo><mtext>  </mtext><mfrac><mrow><mi>x</mi><mo>−</mo><mi>μ</mi></mrow><mrow><mi>σ</mi><mo>+</mo><mi>ϵ</mi></mrow></mfrac><mo separator="true">,</mo></mrow><annotation encoding="application/x-tex">
+\hat{x} \;=\; \frac{x - \mu}{\sigma + \epsilon},
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">x</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord">^</span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0297em;vertical-align:-0.7693em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">ϵ</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">μ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7693em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span></span></span></span></span></div><p>a roughly unit-scale curve that means the same thing wherever it came from. The two scalars I
+peeled off, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">μ</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span>, are not thrown away. I will re-emit them as tokens in a
+moment, because anything I normalize away has to come back as a prediction target if I ever
+want to forecast it. De-normalization at decode time just inverts the chain,</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>r</mi><mtext>  </mtext><mo>=</mo><mtext>  </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><mover accent="true"><mi>x</mi><mo>^</mo></mover><mtext> </mtext><mi>σ</mi><mo>+</mo><mi>μ</mi><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo><mtext> </mtext><msub><mover accent="true"><mi>σ</mi><mo>^</mo></mover><mi>t</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+r \;=\; \big(\hat{x}\,\sigma + \mu\big)\,\hat{\sigma}_t .
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">x</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord">^</span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord mathnormal">μ</span><span class="mord"><span class="delimsizing size1">)</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">^</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div><p>One discipline runs through all of this and it is non-negotiable: every statistic uses only
+data at or before its own patch. The vol estimate is lagged, the patch stats are local,
+nothing is fit on data that postdates what it touches. That is the no-look-ahead requirement
+showing up at the very first step, and getting the inverse of this chain exactly right matters
+just as much, since any error there leaks straight into the decoded forecast.</p>
+<p><img alt="One raw patch flowing through vol-normalize, z-score, and a four-codebook residual VQ into the token group sigma-mu-c1-c2-c3-c4" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_pipeline.png"></p>
+<p>Tokenizing one patch. Scale is divided out first so a single codebook serves every
+instrument, the level <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo separator="true">,</mo><mi>σ</mi></mrow><annotation encoding="application/x-tex">\mu,\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">μ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> is peeled off, and the residual VQ turns the remaining
+shape into code indices.</p>
+<h3 id="quantize-the-shape-with-a-learned-codebook-not-a-projection">Quantize the shape with a learned codebook, not a projection<a hidden class="anchor" aria-hidden="true" href="#quantize-the-shape-with-a-learned-codebook-not-a-projection">#</a></h3>
+<p>Now I turn the shape <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>x</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\hat{x}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">x</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord">^</span></span></span></span></span></span></span></span></span></span> into discrete codes. The naive version snaps it to the nearest
+entry in a single codebook, but one nearest-neighbor lookup is a blunt instrument. Real
+patches are blends, a trend with noise riding on it, and the closest single template throws
+the blend away.</p>
+<p>So I use Residual Vector Quantization. Keep a stack of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">K</span></span></span></span> codebooks, each of size <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span>,
+with embedding vectors <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>e</mi><mi>k</mi></msub><mo stretchy="false">[</mo><mo>⋅</mo><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">e_k[\cdot]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord">⋅</span><span class="mclose">]</span></span></span></span>. The first codebook captures the coarse shape, I subtract
+its reconstruction, and pass the residual to the next codebook, which refines it, and so on
+through all <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">K</span></span></span></span> levels:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>x</mi><mo>^</mo></mover><mtext>  </mtext><mo>≈</mo><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>e</mi><mi>k</mi></msub><mo stretchy="false">[</mo><msub><mi>c</mi><mi>k</mi></msub><mo stretchy="false">]</mo><mo separator="true">,</mo><mspace width="2em"/><msub><mi>c</mi><mi>k</mi></msub><mo>∈</mo><mo stretchy="false">{</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><mi>V</mi><mo stretchy="false">}</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+\hat{x} \;\approx\; \sum_{k=1}^{K} e_k[c_k], \qquad c_k \in \{1, \dots, V\}.
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">x</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord">^</span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.1304em;vertical-align:-1.3021em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8479em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">K</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3021em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">]</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">{</span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="mclose">}</span><span class="mord">.</span></span></span></span></span></div><p>The shape becomes an ordered tuple <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>c</mi><mn>1</mn></msub><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>c</mi><mi>K</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(c_1, \dots, c_K)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">K</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span>, coarse to fine. This buys an effective
+vocabulary of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>V</mi><mi>K</mi></msup></mrow><annotation encoding="application/x-tex">V^K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8413em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">K</span></span></span></span></span></span></span></span></span></span></span> distinct shapes while storing only <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>⋅</mo><mi>V</mi></mrow><annotation encoding="application/x-tex">K \cdot V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">K</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> embedding rows, and it
+represents blends naturally, because each level corrects what the previous one missed. I train
+it end to end with a straight-through estimator and a commitment loss, plus the usual VQ
+hygiene to stop the codebook collapsing: EMA code updates, dead-code revival, and a
+utilization target.</p>
+<p>I can watch the refinement happen on a real patch. This one takes a volatile <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>-day window
+and rebuilds it one codebook at a time. The first code lands a coarse approximation, and each
+level chips away the residual, so the reconstruction error falls monotonically.</p>
+<p><img alt="Residual VQ rebuilding a real patch coarse-to-fine, with reconstruction error falling at each of four levels" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_residual_refinement.png"></p>
+<p>Four levels of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">V=256</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">256</span></span></span></span> codes take one shock patch from NMSE 0.135 to 0.006. Coarse first,
+then residual refinements.</p>
+<p>Once trained, the codebook is a dictionary of recurring shapes the data taught it, not a
+basis I imposed. I can look at the dictionary directly by decoding each code back into the
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>-day curve it stands for. These are the most frequently used first-level atoms across
+tens of thousands of real patches, and they read like an alphabet of elementary moves: ramps,
+reversals, single-day pops, quiet drifts.</p>
+<p><img alt="A grid of learned level-1 codebook atoms, each an N-day shape, annotated with how often real patches select it" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_atoms_level1.png"></p>
+<p>The 24 most-used first-level atoms, ranked by selection frequency over 67,233 real patches.
+Each panel is one learned shape.</p>
+<p>The test that matters is whether real patches survive the round trip, especially the ones a
+forecaster cannot afford to blur. They do. Here are three patches a model has to get right, a
+clean trend, a choppy reversal, and a volatility shock, each decoded back from its four codes.</p>
+<p><img alt="Three real N-day patches (trend, chop, shock), each overlaid with its four-code RVQ reconstruction" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_reconstructions.png"></p>
+<p>Real patches (solid) and their tokenized reconstructions (dashed). The bracketed integers
+are the four code indices; titles report reconstruction NMSE, all around 0.006.</p>
+<h3 id="the-levels-become-tokens-too">The levels become tokens too<a hidden class="anchor" aria-hidden="true" href="#the-levels-become-tokens-too">#</a></h3>
+<p>I still have the two scalars I peeled off, the patch drift <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">μ</span></span></span></span> and the patch volatility
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span>. I could feed them back as raw numbers, but that reintroduces a continuous quantity
+into a model I am keeping discrete, and a scalar magnitude multiplying a vector tends to
+collapse the representation onto a single ray. So I bin them and emit them as their own
+tokens, each with its own embedding row. The volatility token is binned as a vol
+innovation, realized patch vol relative to the trailing estimate, which sits near one and is
+far more stationary across instruments than absolute vol. The drift token bins <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">μ</span></span></span></span> on a
+symmetric grid around zero.</p>
+<p>A patch of one instrument at one time now serializes to a fixed-length token group:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mtext> </mtext><mi>σ</mi><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mtext> </mtext><mi>μ</mi><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mtext> </mtext><msub><mi>c</mi><mn>1</mn></msub><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mtext> </mtext><msub><mi>c</mi><mn>2</mn></msub><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mtext> </mtext><mo>⋯</mo><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mtext> </mtext><msub><mi>c</mi><mi>K</mi></msub><mtext> </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+\big[\,\sigma\,\big]\ \big[\,\mu\,\big]\ \big[\,c_1\,\big]\ \big[\,c_2\,\big]\ \cdots\ \big[\,c_K\,\big].
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mspace"> </span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">μ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mspace"> </span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mspace"> </span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">⋯</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">K</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mord">.</span></span></span></span></span></div><p>The analogy is exact. A patch is a word, and its token group is the spelling of that word in
+an alphabet of scales and shapes. Everything the model reads or writes is now a token from a
+finite vocabulary, which is the property I set out to preserve.</p>
+<hr>
+<h2 id="hundreds-of-series-in-one-sequence">Hundreds of series in one sequence<a hidden class="anchor" aria-hidden="true" href="#hundreds-of-series-in-one-sequence">#</a></h2>
+<p>I can tokenize one patch. A forecaster that reads one series at a time still fails the second
+requirement, so now I lay every instrument into a single sequence.</p>
+<p>Every instrument is just a stream id, and I flatten all of them into one sequence of token
+groups sorted by <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mtext>timestamp</mtext><mo separator="true">,</mo><mtext>stream</mtext><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(\text{timestamp}, \text{stream})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord text"><span class="mord">timestamp</span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord">stream</span></span><span class="mclose">)</span></span></span></span>. This is an any-variate layout. A
+series that trades rarely, or has a gap, simply contributes no tokens where it has no
+observation. No imputation grid, no per-channel padding. A weekly series drops in one group a
+week, slotted into the timeline beside the daily names. Because every stream lives in the same
+sequence, attention is what correlates them: a token at time <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> can attend to the tokens of
+any stream at earlier timestamps. Cross-asset structure gets learned by the same mechanism
+that learns time. I deliberately do not split the streams into independent channels, because
+the relationships between assets are the most valuable thing in the data.</p>
+<p>That leaves the causal rule, the one genuinely subtle part, and it is where the third
+requirement gets enforced. The mask is block-causal by timestamp. Writing <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">s</mi></mrow><annotation encoding="application/x-tex">\mathrm{ts}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord"><span class="mord mathrm">ts</span></span></span></span></span>,
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">\mathrm{stream}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord"><span class="mord mathrm">stream</span></span></span></span></span>, and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">t</mi></mrow><annotation encoding="application/x-tex">\mathrm{slot}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord"><span class="mord mathrm">slot</span></span></span></span></span> for a token&rsquo;s timestamp, stream, and position within
+its group, query <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">a</span></span></span></span> may attend key <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi></mrow><annotation encoding="application/x-tex">b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span> iff</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">s</mi></mrow><mi>b</mi></msub><mo>&lt;</mo><msub><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">s</mi></mrow><mi>a</mi></msub><mtext>  </mtext><mtext>  </mtext><mo>∨</mo><mtext>  </mtext><mtext>  </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><msub><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">s</mi></mrow><mi>b</mi></msub><mo>=</mo><msub><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">s</mi></mrow><mi>a</mi></msub><mtext> </mtext><mo>∧</mo><mtext> </mtext><msub><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">m</mi></mrow><mi>b</mi></msub><mo>=</mo><msub><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">m</mi></mrow><mi>a</mi></msub><mtext> </mtext><mo>∧</mo><mtext> </mtext><msub><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">t</mi></mrow><mi>b</mi></msub><mo>&lt;</mo><msub><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">t</mi></mrow><mi>a</mi></msub><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo><mtext>  </mtext><mtext>  </mtext><mo>∨</mo><mtext>  </mtext><mtext>  </mtext><mi>a</mi><mo>=</mo><mi>b</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+\mathrm{ts}_b &lt; \mathrm{ts}_a
+\;\;\lor\;\;
+\big(\mathrm{ts}_b = \mathrm{ts}_a \,\land\, \mathrm{stream}_b = \mathrm{stream}_a \,\land\, \mathrm{slot}_b &lt; \mathrm{slot}_a\big)
+\;\;\lor\;\;
+a = b .
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">ts</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">b</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">ts</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">a</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mord"><span class="mord mathrm">ts</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">b</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">ts</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">a</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">stream</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">b</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">stream</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">a</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">slot</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">b</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">slot</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">a</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="delimsizing size1">)</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span><span class="mord">.</span></span></span></span></span></div><p>A token attends everything strictly earlier in time on any stream, and earlier slots inside
+its own group so that <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">c_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> sees <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">c_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>. Tokens that share a timestamp but belong to different
+streams do not attend to each other while they are being predicted. They are contemporaneous,
+not causal predecessors. Once realized they become ordinary context for everything at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6984em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>
+and later. I give up same-bar cross-asset information at prediction time, and I take that
+trade on purpose, because a lost contemporaneous signal is a known limitation while look-ahead
+bias is an unrecoverable error.</p>
+<p><img alt="The block-causal attention matrix for a two-stream, three-timestamp sequence; allowed cells shaded, the same-bar cross-stream cell marked denied" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_mask.png"></p>
+<p>The actual mask, computed on a tiny two-stream by three-timestamp example. Green is allowed.
+The highlighted cell is the one rule that costs us something: at the same timestamp, stream A
+may not look at stream B.</p>
+<p>Positions and identity follow LLM practice with one adjustment for the two-dimensional layout.
+Rotary embeddings run over the time axis, and a learned instrument embedding acts as a
+segment marker so the model knows which stream a token belongs to. Calendar features, the
+signal family, and the volatility regime enter as additive conditioning embeddings, exactly
+how you would condition an LLM on side information. One generalization comes almost for free:
+non-price signals, event probabilities or physical-flow volumes, ride in as extra streams with
+their own per-family tokenizers, masked out of the loss so they inform forecasts without ever
+becoming forecast targets.</p>
+<hr>
+<h2 id="predicting-the-next-group-and-reading-a-forecast-off-samples">Predicting the next group, and reading a forecast off samples<a hidden class="anchor" aria-hidden="true" href="#predicting-the-next-group-and-reading-a-forecast-off-samples">#</a></h2>
+<p>With the inputs settled the output side is almost entirely standard. The model predicts the
+next token group autoregressively with a single softmax head over the unified vocabulary, tied
+to the input embeddings, just like an LLM. The only addition is a grammar: the slot a token
+occupies inside its group decides which tokens are legal, and the sampler masks the rest. The
+group factorizes into a short autoregressive chain of its own, nested inside the chain over
+time:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>p</mi><mo stretchy="false">(</mo><msub><mtext>group</mtext><mi>t</mi></msub><mo>∣</mo><mtext>context</mtext><mo stretchy="false">)</mo><mtext>  </mtext><mo>=</mo><mtext>  </mtext><mi>p</mi><mo stretchy="false">(</mo><mi>σ</mi><mo stretchy="false">)</mo><mtext>  </mtext><mi>p</mi><mo stretchy="false">(</mo><mi>μ</mi><mo>∣</mo><mi>σ</mi><mo stretchy="false">)</mo><mtext>  </mtext><munderover><mo>∏</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mi>p</mi><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><msub><mi>c</mi><mi>k</mi></msub><mo>∣</mo><mi>σ</mi><mo separator="true">,</mo><mi>μ</mi><mo separator="true">,</mo><msub><mi>c</mi><mrow><mo>&lt;</mo><mi>k</mi></mrow></msub><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+p(\text{group}_t \mid \text{context}) \;=\; p(\sigma)\;p(\mu \mid \sigma)\;\prod_{k=1}^{K} p\big(c_k \mid \sigma, \mu, c_{\lt k}\big).
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord"><span class="mord text"><span class="mord">group</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">context</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord mathnormal">μ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.1304em;vertical-align:-1.3021em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8479em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∏</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">K</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3021em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">μ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mrel mtight">&lt;</span><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1774em;"><span></span></span></span></span></span></span><span class="mord"><span class="delimsizing size1">)</span></span><span class="mord">.</span></span></span></span></span></div><p>Training is the causal language-modeling loss you would expect, cross-entropy on the predicted
+token slots. One note from pretraining, because it looks like a bug and is not: in the calm
+fold the drift token&rsquo;s head collapses onto the zero-drift bin, predicting essentially no drift
+in almost every context, which I will show directly in the results. Daily drift is tiny next to
+daily volatility, which is just market efficiency asserting itself, so under cross-entropy the
+safe and near-optimal move there is to predict zero everywhere. Across all the held-out folds
+the net directional information the head carries is close to zero, with the collapse strongest
+in calm, efficient periods and a little signal surviving in trending, high-vol ones. The head
+ends up confident but, in calm regimes, confidently uninformative about direction, and I leave
+it there for now. Giving it something directional to say is a job for later, and it is exactly
+the kind of job RL might be able to do.</p>
+<p>I do not emit an interval. I sample. From a shared context I draw <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">G</span></span></span></span> rollouts at
+temperature <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi></mrow><annotation encoding="application/x-tex">\tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span>, decode each group back to returns through the inverse of the normalization
+chain, and read quantiles, coverage, and any scoring rule off the empirical ensemble of
+trajectories. This is the Chronos approach, and it is the only output scheme that is at once
+fully probabilistic, directly calibratable, and a legitimate token policy with exact per-token
+log-probabilities. It is also cheap, for the same reason LLM serving is cheap: one prefill of
+the shared context, then fork the KV cache <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">G</span></span></span></span> ways and decode in parallel.</p>
+<hr>
+<h2 id="testing-the-idea-where-pretraining-stands">Testing the idea: where pretraining stands<a hidden class="anchor" aria-hidden="true" href="#testing-the-idea-where-pretraining-stands">#</a></h2>
+<p>That is the architecture, and the tokenizer at the center of it is what this post is claiming. To
+test whether the idea works, I pretrain an autoregressive model on top of these tokens, and I
+want to be careful to report it as what it is: a check on whether the discrete vocabulary
+supports a calibrated model, not a finished system, and certainly not a trading result. What I
+can do is check the two things that have to be true before any
+of the rest matters, on held-out data, because a clean design is worth nothing until it survives
+contact with windows the model never saw. Everything below is on the project&rsquo;s fixed
+walk-forward eval folds, with a thirty-day embargo between the training cutoff and the
+evaluation window.</p>
+<p>First, the most basic question: does pretraining actually optimize this vocabulary at all? It
+does, cleanly.</p>
+<p><img alt="Two panels. Left: training and held-out validation cross-entropy both fall from about 140 nats to single digits and stay on top of each other. Right: per-slot cross-entropy over training, where the drift head drops to the floor quickly while the shape codes carry most of the remaining loss" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_training_curve.png"></p>
+<p>The pretraining loss for one fold. On the left, the total cross-entropy falls from roughly 140
+nats to single digits, and the held-out validation curve sits right on top of the training
+curve the whole way down, so the model is fitting the token stream rather than memorizing it. On
+the right, the per-slot breakdown is already informative: the drift head&rsquo;s loss drops to the
+floor within a few dozen steps, because predicting near-zero drift is both easy and almost
+always right, while the shape codes carry most of the residual loss as the genuinely harder
+thing to learn. That split, an easy drift head and a hard shape head, is a theme the held-out
+diagnostics below return to.</p>
+<p>Start with tokenization, on the hardest data I have. This is palladium futures through
+February to April 2020, deep in the held-out COVID window and well after the model&rsquo;s
+January-2020 cutoff. The market never seen, a violent crash included.</p>
+<p><img alt="45 held-out days of palladium futures through the COVID crash, the tokenized reconstruction tracking the raw path including a -23% day, and the token strip of nine patches" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_sequence_tokenized.png"></p>
+<p>A held-out window strung together as tokens. Panel (a) is the raw series, (b) overlays the
+reconstruction decoded from the tokens, and (c) is the token sequence itself. The production
+group carries one extra slot, a tail-event &ldquo;surprise&rdquo; token <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi></mrow><annotation encoding="application/x-tex">s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">s</span></span></span></span>, which fires on the −23% crash
+day where the move clears four sigma, recording the extreme that the clipped shape codes
+cannot. The vol tokens track the elevated volatility throughout.</p>
+<p>The reconstruction tracks the crash, and the tail-event token fires exactly where it should.
+The tokenizer generalizes to a market it never saw.</p>
+<p>The harder question is forecasting. Start with the everyday case, because that is what decides
+whether the forecaster is useful at all. Here are held-out forecasts for nine different
+instruments across the calm 2017 fold, the quietest stretch in the data.</p>
+<p><img alt="A three-by-three gallery of held-out calm-fold forecasts on nine instruments, where the quantile bands cover the realized paths, with per-panel coverage shown" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_forecast_gallery.png"></p>
+<p>Nine held-out forecasts, one instrument per panel, from the calm eval fold. Black is the context
+tail, blue the quantile bands and median, orange what actually happened. The bands cover the
+realized paths at close to the nominal rate: across forty held-out windows the model&rsquo;s 80%
+interval contains the realized return about 88% of the time, and repeating the check across all
+three standing eval folds puts per-fold coverage between roughly 85% and 93%, consistently at or
+above nominal, erring conservative rather than overconfident.</p>
+<p>Normal conditions are the easy case, though. The harder test is the held-out COVID window, where
+I can show both what the model does well and where it stops. The two panels below are the same
+metals complex through February to April 2020, well after the January-2020 cutoff.</p>
+<p><img alt="Two held-out COVID forecasts side by side: on the left the quantile bands bracket a real multi-percent move; on the right a sharper one-day move pokes below the band before settling back" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_sequence_forecast.png"></p>
+<p>Two held-out COVID-era forecasts. On the left, platinum: the model is already in the
+high-volatility regime, with its sampled vol tokens in the elevated bins and the band widened
+accordingly, and it brackets a genuine multi-percent move, covering roughly nine days in ten.
+On the right, palladium: the same wide band mostly holds, but a sharper one-day move punches
+below it before the path settles back inside. That is the limit, and it has a hard edge.
+The single most violent day in this window was a +19% one-day spike, and no widening of the band
+would have called it. At the extreme, the size of a single move is not forecastable, by this
+model or any other. The model&rsquo;s job there is to flag the regime and keep the distribution
+honest, which it does; calling the magnitude of a one-day shock is not on the menu.</p>
+<p>So where does that leave us. The tokenizer round-trips cleanly on held-out data, crashes
+included. The forecaster reads as calibrated in normal conditions and appropriately wide in
+violent ones, with per-fold 80% coverage running mildly above nominal rather than below. The
+headline coverage number bears less weight than it looks, though. The forty walk-forward windows behind it overlap heavily, so they are
+nowhere near forty independent observations, so the effective sample size is smaller than the
+count suggests, and a single coverage figure from correlated windows carries a wide confidence band
+around it. One nominal level checked this way is a sanity check, not a calibration certificate.
+The defensible version of the claim is a reliability curve that sweeps several nominal levels
+with bootstrapped intervals, reported next to a proper score such as CRPS; that fuller picture is
+the right bar for a stronger calibration claim. From here, the most I will say is that the model reads
+as mildly over-covering rather than overconfident, and that it flags a high-volatility regime
+through the vol token instead of pretending to predict the direction and size of a one-day shock.</p>
+<p>A word on what this is and is not. This is a calibration result, not a skill-beats-baseline
+result, and I am not claiming it as one. Skill is a comparative claim, and it has a bar: the
+cheap competitor is a last-value drift with EWMA volatility bands, and the distributional
+competitors are the zero-shot foundation models I started from, Chronos and TimesFM, with a
+classical ARIMA underneath them. Turning &ldquo;calibrated&rdquo; into &ldquo;calibrated and competitive&rdquo; means
+beating those on a matched, like-for-like episode set, and getting that comparison genuinely
+apples-to-apples, meaning the same universe restriction and the same windows, is finicky enough that I would
+rather finish it than quote ratios I cannot yet stand behind. So I am stating the bar here and
+deferring the table, on purpose. The forecast median sits near zero, like a last-value baseline,
+because daily drift is barely forecastable from cross-entropy alone. The model&rsquo;s edge so far is
+in volatility and in the shape of the distribution, not in calling direction. That collapse is
+worth showing directly, because it is the cleanest read on what pretraining did and did not buy.
+It is sharpest in the calm fold, which is what the next figure shows; across a walk-forward
+sweep of all the held-out history the net directional information the drift head carries is near
+zero (mean about -0.02 bits, with a confidence interval that crosses zero), negative in the calm
+and efficient stretches and mildly positive in the trending, high-vol ones.</p>
+<p><img alt="Two panels. Left: the model&rsquo;s average predicted drift distribution is a sharp spike on the zero bin while its predicted volatility distribution spreads across many bins. Right: across two dozen held-out windows on different instruments, the predicted mean drift sits on the zero bin every time, using one of 128 available drift bins" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_drift_collapse.png"></p>
+<p>What the drift head actually learned, measured on held-out calm-fold contexts at sampling
+temperature one. On the left, the model&rsquo;s average predicted distribution: the drift token is a
+near-point-mass on the zero bin, while the volatility token spreads across its range, so the
+model genuinely varies its vol call but commits to &ldquo;no drift&rdquo; regardless. On the right, the mean
+predicted drift across two dozen held-out windows on different instruments never leaves the zero
+bin, effectively using one of 128 available drift bins. In this fold the head is confident and
+constant. It has learned the cross-entropy-optimal move for a calm market, which is to predict
+no drift everywhere, and that is exactly the signal RL would have to install.</p>
+<p>It is worth being precise about &ldquo;uninformative&rdquo; here, because the natural diagnostic, the
+entropy of each head&rsquo;s predictive distribution during a rollout, is genuinely useful for most of
+the vocabulary and only misleading for drift. Entropy measures how decisively the model commits
+when it samples, not whether that commitment is correct.</p>
+<p><img alt="A bar chart of predictive confidence (one minus normalized entropy) per slot: the volatility head lowest, the four shape codes higher, and the drift head highest but annotated as confident-but-constant" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_slot_confidence.png"></p>
+<p>Read that way, the shape and volatility heads carry real predictive confidence: they commit to
+specific learned structure rather than spreading mass uniformly, the shape codes most decisively,
+which is the model picking out particular shapes from its alphabet rather than hedging. The
+volatility head commits least, spreading across nearby vol bins, which is the right behavior when
+the exact magnitude is uncertain. Drift is the cautionary case, and the reason entropy alone can
+mislead: it scores as the <em>most</em> confident head, but only because it has collapsed onto a single
+bin and predicts zero everywhere. High confidence and zero directional information at once. So
+the entropy is informative, as long as you read it as commitment rather than skill: the shape
+codes are decisive and learned, and the drift head is decisive and empty, which is the precise
+gap any directional follow-up would have to close.</p>
+<hr>
+<h2 id="a-direction-this-opens-up-rl-for-alpha">A direction this opens up: RL for alpha<a hidden class="anchor" aria-hidden="true" href="#a-direction-this-opens-up-rl-for-alpha">#</a></h2>
+<p>Everything in this section is design and speculation, not results. It is the reason the alphabet
+looks the way it does, written out so the tokenizer choices read as deliberate rather than
+arbitrary, and it sketches a direction the discrete design makes possible. Whether it pans out is
+an open question I have not answered here. Here is why I built the whole thing
+discrete, every step of the way. Because every emitted token comes from a frozen finite
+vocabulary with an exact softmax probability, the model is a discrete autoregressive policy</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="false">(</mo><mtext>token</mtext><mo>∣</mo><mtext>context</mtext><mo stretchy="false">)</mo><mo separator="true">,</mo></mrow><annotation encoding="application/x-tex">
+\pi_\theta(\text{token} \mid \text{context}),
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord text"><span class="mord">token</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">context</span></span><span class="mclose">)</span><span class="mpunct">,</span></span></span></span></span></div><p>with exact per-token log-probabilities. That is the precise interface modern
+reinforcement-learning-from-verifiable-rewards methods expect, the GRPO and GSPO family that
+post-trains large language models. The mechanics carry over without modification, and the
+reason the fit is more than cosmetic comes down to two facts about markets, each of which I
+will state with the caveat it deserves, because both are easy to oversell.</p>
+<p>The first is that the verifier is cheap to compute. I do not need a learned reward model or a
+simulator; the realized future is the ground truth, revealed after the fact. An episode is a
+date <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> and a universe of instruments, a rollout is a sampled set of forecast trajectories for
+the next <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi></mrow><annotation encoding="application/x-tex">H</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span></span></span></span> steps, and the reward is a deterministic function of those trajectories and what
+actually happened. The market scores the policy.</p>
+<p>Cheap to compute is not the same as easy to learn from, and this is the caveat I will not
+gloss. A single-date rank information coefficient is a near-zero-mean, heavy-tailed reward: the
+edge I am chasing is small by construction, and the realized cross-section is noisy, so the
+variance of the reward dwarfs its mean. Whether GRPO has any usable gradient at all comes down
+to the signal-to-noise ratio of that reward across a group of rollouts. If most groups come
+back with near-identical rewards, the advantages are nearly zero and the update is mostly noise.
+That, together with credit assignment across the token chain and the non-stationarity of markets
+between training and deployment, is the genuine open question, and the main reason this direction
+might not pan out. Before anyone could claim RL works here at all, the first thing to measure is
+that reward variance, an explicit go/no-go gate rather than an assumption.</p>
+<p>The second is structural, and it is what makes group-relative methods a natural fit, but the
+mechanism deserves to be stated precisely, because there is a cleaner-sounding story than the
+true one. Start with where beta actually goes, because it is not the place people usually point.
+I never let forecasts become positions freely. A fixed, deliberately simple, non-learnable
+sizing rule maps each rollout&rsquo;s cross-sectional forecasts to a dollar-neutral long-short book:
+rank the predicted drifts, go long the top names and short the bottom, vol-scaled, with
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>i</mi></msub><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sum_i w_i = 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0269em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span>. A dollar-neutral book carries roughly zero beta, so riding equity or commodity
+beta earns nothing. On top of that, the realized returns are residualized against a small factor
+model before scoring, so &ldquo;long momentum&rdquo; cannot masquerade as selection. Between them, the
+sizing rule and the residualization are what strip beta out of the reward, and they do it in
+the reward <em>construction</em>, before a single step of reinforcement learning. The headline reward
+is then the rank information coefficient: the Spearman correlation between a rollout&rsquo;s predicted
+drift ranking and the realized residualized return ranking. A pinball-loss anchor rides
+alongside it so the policy keeps its distribution calibrated rather than chasing rank at the
+expense of everything else.</p>
+<p>Now the group baseline. I sample <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">G</span></span></span></span> rollouts from the same context, every one facing the same
+realized future, and GRPO forms a group-relative advantage,</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>A</mi><mo>^</mo></mover><mi>i</mi></msub><mtext>  </mtext><mo>=</mo><mtext>  </mtext><mfrac><mrow><msub><mi>R</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>R</mi><mo>ˉ</mo></mover></mrow><mrow><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">d</mi></mrow><mo stretchy="false">(</mo><mi>R</mi><mo stretchy="false">)</mo></mrow></mfrac><mo separator="true">,</mo><mspace width="2em"/><mover accent="true"><mi>R</mi><mo>ˉ</mo></mover><mo>=</mo><mfrac><mn>1</mn><mi>G</mi></mfrac><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>G</mi></munderover><msub><mi>R</mi><mi>j</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+\hat{A}_i \;=\; \frac{R_i - \bar{R}}{\mathrm{std}(R)}, \qquad \bar{R} = \frac{1}{G}\sum_{j=1}^{G} R_j .
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0968em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9468em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">A</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1111em;"><span class="mord">^</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4331em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4971em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">std</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mclose">)</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8201em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8201em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.2421em;vertical-align:-1.4138em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">G</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">G</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.4138em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></div><p>It is tempting to say this baseline &ldquo;subtracts beta and leaves alpha,&rdquo; and you can see the
+appeal: imagine the reward splitting into a group-common term <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi></mrow><annotation encoding="application/x-tex">m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">m</span></span></span></span> and a rollout-specific skill
+term, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>i</mi></msub><mo>=</mo><mi>m</mi><mo>+</mo><msub><mi>s</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">R_i = m + s_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">m</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, and the common term cancels in the centering, leaving <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover accent="true"><mi>A</mi><mo>^</mo></mover><mi>i</mi></msub><mo>∝</mo><msub><mi>s</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>s</mi><mo>ˉ</mo></mover></mrow><annotation encoding="application/x-tex">\hat{A}_i \propto
+s_i - \bar{s}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0968em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9468em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">A</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1111em;"><span class="mord">^</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∝</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.5678em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">s</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1944em;"><span class="mord">ˉ</span></span></span></span></span></span></span></span></span></span>. That decomposition is useful intuition, but taken literally it mischaracterizes
+what the baseline does. The group baseline is a generic variance-reduction control variate: it
+cancels whatever is common to the group, nothing more specific than that. And because the reward
+construction already removed beta, the group-common market term is mostly gone before the
+baseline ever sees it. What the baseline genuinely buys is variance reduction of a different
+kind: every rollout in the group is scored against the <em>same</em> realized future, so the shared
+realization noise in that future cancels across the group, and the advantage isolates
+differences in positioning from differences in luck. Beta is removed by the reward; the baseline
+reduces variance. Those are two separate jobs, and keeping them separate is what the claim
+actually supports.</p>
+<p>Why bother with RL at all when cross-entropy already optimizes shape, differentiably and far
+more sample-efficiently? Because the objective I actually care about cannot be backpropagated
+token by token. Alpha is a property of the ranking across the cross-section against a
+residualized future, net of transaction costs and factor-exposure penalties, evaluated on
+realized data the model has to forecast first. That is a verifiable reward, not a differentiable
+loss, and it is exactly the regime where RL earns its sample cost.</p>
+<p>Two notes on that reward before I oversell it. First, costs are not a garnish. For a
+book that re-ranks and rebalances daily, turnover and transaction costs are first-order, not &ldquo;a
+small term added at the end&rdquo;. A strategy that looks profitable gross can be flat or negative
+net, so the quantity that has to clear the bar is net-of-cost IC, and measuring turnover under a
+range of cost assumptions belongs in the reward design rather than after it. Second, there is a
+statistical reason to <em>hope</em> a small cross-sectional edge aggregates into something usable,
+Grinold&rsquo;s fundamental law,</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mrow><mi mathvariant="normal">I</mi><mi mathvariant="normal">R</mi></mrow><mtext>  </mtext><mo>≈</mo><mtext>  </mtext><mrow><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo>⋅</mo><msqrt><mtext>breadth</mtext></msqrt><mo separator="true">,</mo></mrow><annotation encoding="application/x-tex">
+\mathrm{IR} \;\approx\; \mathrm{IC}\cdot\sqrt{\text{breadth}},
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathrm">IR</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathrm">IC</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1755em;vertical-align:-0.1944em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9811em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord text"><span class="mord">breadth</span></span></span></span><span style="top:-2.9411em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.0589em;"><span></span></span></span></span></span><span class="mpunct">,</span></span></span></span></span></div><p>the information ratio scaling as skill times the square root of the number of independent bets.
+But I want it as a directional sanity check, not a promise, because the breadth that enters the
+formula is the number of <em>independent</em> bets. A few hundred factor-residualized names trading
+together on a single date are nowhere near independent; their effective breadth is far smaller
+than the universe size, plausibly tens rather than hundreds, and the real breadth budget also
+accumulates across time, which one date does not capture. So the reading is milder than
+&ldquo;the noise averages cleanly away&rdquo;: cross-sectional averaging does damp the per-name noise that
+would swamp a single-name reward, but how much usable signal survives is an empirical question
+about effective breadth, not something the square root hands me for free.</p>
+<p>The drift head that collapsed onto zero after pretraining is the thing RL would have to wake up.
+Whether that head could ever come off the zero bin is the metric I would watch most closely, because
+the failure mode here is a policy that earns the calibration anchor by predicting volatility and
+zero drift everywhere, and quietly stops taking directional bets. That is exactly why the
+rank-IC term exists: it pays only for drift discrimination.</p>
+<p>There is a deeper risk that couples the tokenizer and any future RL phase in a way that is easy
+to miss. The
+tokenizer is frozen, and reinforcement learning can only shift probability among tokens that
+already exist; it cannot invent a finer action than the vocabulary provides. So the question
+that comes <em>before</em> &ldquo;can RL find alpha&rdquo; is whether the discrete action space even contains it.
+The drift token is binned on a symmetric grid around zero, and after pretraining its
+distribution is nearly centered, precisely the regime where one might worry the bin width is too
+wide to separate the top-ranked names from the bottom-ranked ones at the resolution alpha
+actually lives at. If the grid cannot express the distinction, no amount of policy gradient will
+recover it. This is checkable before spending a single GPU hour on RL: take the realized
+residualized drift, snap each name to its best-achievable bin, and compute the rank-IC of that
+oracle assignment. That number is an upper bound on what <em>any</em> policy can extract through the
+current vocabulary.</p>
+<p>I ran that check, and the action space passes it cleanly.</p>
+<p><img alt="Per-fold and pooled oracle rank-IC of the best-achievable drift-bin assignment, sitting at roughly 0.99 across folds with the drift bins finely spaced near zero" loading="lazy" src="/posts/learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting/fig_drift_ceiling.png"></p>
+<p>The oracle ceiling: the rank-IC an optimal policy could reach by snapping each name to its
+best drift bin through the frozen vocabulary. It sits near perfect, 0.99 per fold (calm 1.00,
+highvol 0.99, regime 0.99) and 0.995 pooled with a confidence interval of [0.993, 0.996]. The
+reason is bin resolution where it matters: the 128 drift bins are quantile-spaced, so they are
+fine exactly where drift concentrates, roughly 0.0085 wide near zero, with 43 of the 127 edges
+falling inside ±0.2. Separating the cross-section takes very little of that grid, only about 9
+to 11 occupied bins for the 11-to-13-name universe on a typical date, and clipping outside the
+grid is negligible (well under a percent of names on the calm and regime folds). The discrete
+action space contains the directional signal. If RL were ever to chase that signal, the
+bottleneck would be learning to use the vocabulary rather than the vocabulary itself, so
+re-binning the drift token is not needed. One caveat worth stating: this
+ceiling is measured on the actual commodity and FX universe of roughly 13 names, and a much
+larger cross-section would demand more resolution to rank, though the quantile-spaced bins, which
+already concentrate where drift lives, would likely still suffice.</p>
+<p>The whole point of keeping the model a plain token policy is that the RL trainers built for
+LLMs, the verl and TRL and OpenRLHF stacks, plug in as-is, with a custom environment that serves
+held-out context windows and scores rollouts against the reserved future already sitting in the
+data.</p>
+<p>The two measurements above frame the opportunity exactly. The oracle ceiling says the frozen
+action space provably contains the directional signal, rank-IC near one. The information-gain
+sweep says pretraining extracts almost none of it, net directional information near zero. The gap
+between those two numbers is the alpha that is sitting in the vocabulary unclaimed, and closing
+it, if it can be closed at all, is a learning problem rather than an architecture problem. That
+is the direction the design points toward, with no guarantee it works out.</p>
+<hr>
+<h2 id="the-dictionary">The dictionary<a hidden class="anchor" aria-hidden="true" href="#the-dictionary">#</a></h2>
+<p>Read the model back through the LLM it was built to imitate.</p>
+<table>
+  <thead>
+      <tr>
+          <th>Language model</th>
+          <th>This forecaster</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>word-piece token</td>
+          <td>learned signal-shape code (RVQ) plus scale and drift tokens</td>
+      </tr>
+      <tr>
+          <td>BPE tokenizer</td>
+          <td>frozen, versioned RVQ tokenizer</td>
+      </tr>
+      <tr>
+          <td>embedding table</td>
+          <td>shared token embeddings plus family / instrument / calendar / vol conditioning</td>
+      </tr>
+      <tr>
+          <td>one stream of tokens</td>
+          <td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mtext>timestamp</mtext><mo separator="true">,</mo><mtext>stream</mtext><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(\text{timestamp}, \text{stream})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord text"><span class="mord">timestamp</span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord">stream</span></span><span class="mclose">)</span></span></span></span>-sorted token groups, any-variate</td>
+      </tr>
+      <tr>
+          <td>causal mask</td>
+          <td>block-causal by timestamp, strict no-look-ahead</td>
+      </tr>
+      <tr>
+          <td>next-token softmax</td>
+          <td>next-token-group softmax with a per-slot grammar</td>
+      </tr>
+      <tr>
+          <td>temperature-sampled completions</td>
+          <td>sampled forecast trajectories scored as an ensemble</td>
+      </tr>
+      <tr>
+          <td>KV-cache decoding</td>
+          <td>KV-cache-forked group sampling, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">G</span></span></span></span> rollouts from one prefill</td>
+      </tr>
+      <tr>
+          <td>RLHF / RLVR</td>
+          <td>RLVR with the realized market as the verifier</td>
+      </tr>
+  </tbody>
+</table>
+<p>I did not invent a bespoke architecture and then build tooling for it. I borrowed the most
+heavily engineered architecture in machine learning and asked the one question that borrowing
+leaves open: what is the alphabet? The answer, a learned RVQ vocabulary of vol-normalized signal
+shapes with scale and drift peeled off into their own tokens, is the contribution of this post, and
+the thing I can defend now. It round-trips cleanly on held-out data, crashes included. The
+discipline it bought, a frozen action space and exact log-probabilities, is also what keeps every
+downstream door open: pretraining, which reads as calibrated on data it
+never saw, and beyond it a direction the whole design points at: a forecaster one could post-train
+against the market itself, where the reward construction strips beta, the group baseline tames
+variance, and cross-sectional skill is what is left to optimize. The oracle ceiling already
+settled the prerequisite that worried me most: the frozen action space contains the directional
+signal, rank-IC near one, while pretraining has so far extracted almost none of it, directional
+information near zero. So the remaining gap is a learning problem on a vocabulary that provably
+holds the alpha, not an architecture problem, though whether RL can actually close that gap is
+an open question I have not answered here.</p>
+<hr>
+<p>Whether RLVR can turn this calibrated policy into one with a directional edge is a direction
+worth exploring, opened up by the discrete design rather than promised by it. The tokenizer
+is the part I can stand behind today: it round-trips on held-out data, crashes included, and the
+pretrained model on top reads as calibrated with no directional edge yet. The rest is a
+possibility, not a plan. I am running the RLVR experiments now, and I will publish how they
+actually turn out, edge or no edge, in a future post.</p>
+
+
+        </div>
+    </div>
+</article>
+    </main>
+    
+<footer class="footer site-footer">
+    <span>&copy; 2026 <a href="http://localhost:1313/">Larry Thul</a></span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top" class="top-link" id="top-link">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    if (mybutton) {
+        window.onscroll = function () {
+            if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+                mybutton.style.visibility = "visible";
+                mybutton.style.opacity = "1";
+            } else {
+                mybutton.style.visibility = "hidden";
+                mybutton.style.opacity = "0";
+            }
+        };
+    }
+</script>
+</body>
+
+</html>
