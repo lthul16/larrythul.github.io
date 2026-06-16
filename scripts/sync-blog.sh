@@ -31,8 +31,9 @@ SRC_BLOG="$(cd "$SRC_BLOG" && pwd)"
 # One line per post:  <source-markdown> | <source-figures-dir> | <dest-bundle-slug>
 # The markdown is copied to <dest>/index.md; every *.png in the figures dir is copied
 # flat into <dest>/ (the markdown references figures by bare filename).
+# Content is not checked in on this branch; run this script when ready to publish.
 POSTS=(
-  "forecaster_architecture.md|figures|bringing-llm-style-rlvr-to-forecasting-part-1"
+  "forecaster_architecture.md|figures|learned-alphabet-market-signals-tokenizing-time-series-for-llm-style-forecasting"
 )
 
 # --- sync -------------------------------------------------------------------
